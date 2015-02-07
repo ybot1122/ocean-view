@@ -152,9 +152,26 @@ var noteContainer = new NoteContainer({
 		'<p>The following browsers support the Canvas element:</p>' +
 		'<ul><li>Internet Explorer 9+,</li><li>FireFox 2+,</li>' +
 		'<li> Google Chrome 4+,</li><li> Safari 3.1+,</li>' +
-		'<li> Opera 9.0+,</li><li> iOS Safari 3.2+,</li><li> Android Browser 2.2+</li></ul>'
+		'<li> Opera 9.0+,</li><li> iOS Safari 3.2+,</li><li> Android Browser 2.2+</li></ul>' +
+		'<input type="text" id="text" /><input type="button" id="button" value="Search" />'
 });
 
+$("input#button").click(function () {
+var searchtext = "seattle";
+	var url = "http://geocoder.cit.api.here.com/6.2/geocode.json?"
+		+ "searchtext=" + $("input#text").val()
+		+ "&app_id=DemoAppId01082013GAL"
+		+ "&app_code=AJKnXv84fjrb0KIHawS0Tg"
+		+ "&gen=6"
+	$.getJSON(url, function (data) {
+		var mv = data.Response.View[0].Result[0].Location.MapView;
+		var bbox = new nokia.maps.geo.BoundingBox(
+			new nokia.maps.geo.Coordinate(mv.TopLeft.Latitude, mv.TopLeft.Longitude),
+			new nokia.maps.geo.Coordinate(mv.BottomRight.Latitude, mv.BottomRight.Longitude)
+		);
+		map.zoomTo(bbox, false, "default");
+	});
+});
 		</script>
 	</body>
 </html>
