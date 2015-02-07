@@ -8,7 +8,6 @@ b)
 
 */
 
-<<<<<<< HEAD
 function get_subsidized_buildings() {
   var subsidies = "IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y' OR IS_221D3_IND='y'"
        + " OR IS_221D4_IND='y' OR IS_236_IND='y' OR IS_811_CAPITAL_ADVANCE_IND='y' OR IS_ACC_OLD_IND='y' OR IS_ACC_PERFORMANCE_BASED_IND='y'"
