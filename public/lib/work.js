@@ -8,6 +8,7 @@ b)
 
 */
 
+<<<<<<< HEAD
 function get_subsidized_buildings() {
   var subsidies = "IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y' OR IS_221D3_IND='y'"
        + " OR IS_221D4_IND='y' OR IS_236_IND='y' OR IS_811_CAPITAL_ADVANCE_IND='y' OR IS_ACC_OLD_IND='y' OR IS_ACC_PERFORMANCE_BASED_IND='y'"
@@ -40,5 +41,27 @@ function get_subsidized_buildings() {
 }
 
 function get_population() {
+  
+}
+
+//Function to get data for each map rectangle
+//Uses the location to put the data in the correct cell
+// Takes in the top left coudinate of map, bottom left cordinate of the map. numBlocks: 2 entry array with number of rows and columns
+// returns a 2D array with data in each cell
+// Loops through all of the data, and puts each into the correct location in the array
+// Uses the getArrayLoc
+function getMapData(data, mapTopLeft, mapBottomRight, numBlocks){
+  for (dataNum = 0; dataNum < data.length; dataNum ++){
+     
+  }
+}
+  
+// Gives the row and column that the data should belong to in the array
+function getArrayLoc(dataEntry, mapTopLeft, mapBottomRight, numBlocks){
+  arrayLoc = [0,0];
+  //loop for rows and cols
+  for(cord=0; cord < 2; cord++){
+    blockLen = (mapBottomRight - mapTopLeft)/num
+  }
   
 }
