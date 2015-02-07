@@ -1,0 +1,11 @@
+{
+  "name": "Ocean-View",
+  "version": "0.0.1",
+  "main": "app.js",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "express": "^4.11.1",
+    "http": "*",
+    "express-session": "*"
+  }
+}
