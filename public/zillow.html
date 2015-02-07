@@ -2,11 +2,11 @@
 <html> 
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=7; IE=EmulateIE9; IE=10" />
-		<base href="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/public/api-for-js/data-visualization/map-with-density-heat-map.html" />
+		<base href="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/public/api-for-js/data-visualization/map-with-value-heat-map.html" />
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-		<title>HERE Maps API for JavaScript Example: Add density based heat map</title>
-		<meta name="description" content="Visualize your analytics data using a density heat map"/>
-		<meta name="keywords" content="densityheatmap, heatmaps, data visualization, heat, map"/>
+		<title>HERE Maps API for JavaScript Example: Add value based heat map</title>
+		<meta name="description" content="Visualize your analytics data using a value based heat map"/>
+		<meta name="keywords" content="valueheatmap, heatmaps, data visualization, heat, map"/>
 		<!-- For scaling content for mobile devices, setting the viewport to the width of the device-->
 		<meta name=viewport content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<!-- Styling for example container (NoteContainer & Logger)  -->
@@ -68,32 +68,15 @@ var map = new nokia.maps.map.Display(mapContainer, {
 });
 
 var heatmapProvider;
-var colorizeAPI = {
-	/* Points on the heat map are colorized using the color-stops (range 0 - 1)
-	 * The highest data points will get a color defined by 1 and the 
-	 * the lower your data points get they will get a color defined by 0
-	 */
-	stops: {
-		"0": "#E8680C",
-		"0.25": "#F5A400",
-		"0.5": "#FF9000",
-		"0.75": "#FF4600",
-		"1": "#F51F00"
-	},
-	// Whether we should interpolate between the stops to create a smooth color gradient
-	interpolate: true
-};
 try {
 	// Creating Heatmap overlay
 	heatmapProvider = new nokia.maps.heatmap.Overlay({
-		// How to color the heatmap
-		colors: colorizeAPI,
 		// This is the greatest zoom level for which the overlay will provide tiles
 		max: 20,
 		// This is the overall opacity applied to this overlay
-		opacity: 1,
+		opacity: 0.6,
 		// Defines if our heatmap is value or density based
-		type: "density",
+		type: "value",
 		// Coarseness defines the resolution with which the heat map is created.
 		coarseness: 2
 	});
@@ -111,28 +94,27 @@ if (heatmapProvider) {
 		 * See exampleHelpers.js for implementation details 
 		 */
 		loadScript(
-			"../../../res/earthquakes.js",
+			"../../../res/earthquakes.js", 
 			function () {
 				/**
-				 * Filtering data to show only eartquakes with magnitude above 4.5.
+				 * Filtering data to show only eartquakes with magnitud above 4.5. Variable data comes from script inserted in head (heatmap.js)
 				 * This file is array of objects like:
 				 * data = [
 				 * 		{latitude: 53, longitude: 13: value 5.3},
 				 * 		....
 				 * ];
 				 */
-				
 				for (var i = 0; i < data.length; i++) {
 					if (data[i].value < 4.5) {
 						data.splice(i, 1);
 					}
 				}
 				
-				// Passing the data to the heat map
+				// Rendering the heat map overlay onto the map
 				heatmapProvider.addData(data);
-				// Rendering the heat map onto the map
 				map.overlays.add(heatmapProvider);
-		});
+			}
+		);
 	}, false);
 }
 /* We create a UI notecontainer for example description
@@ -140,12 +122,12 @@ if (heatmapProvider) {
  * See exampleHelpers.js for implementation details 
  */
 var noteContainer = new NoteContainer({
-	id: "densityHeatmapUi",
+	id: "valueHeatmapUi",
 	parent: document.getElementById("uiContainer"),
-	title: "Rendering a density based heat map",
+	title: "Rendering a value based heat map",
 	content:
 		'<p>This heat map example shows how many earthquakes there were in a particular region ' +
-		'using a density heat map (original source: ' + 
+		'using a value heat map (original source: ' + 
 		'<a href="../../../res//kml/usgs/earthquakes.kml" target="_blank">KML data</a> from ' +
 		'U.S. Geological Survey).</p>' +
 		'<p>Heatmap package only works in browsers supporting the HTML5 Canvas element.</p>' +
