@@ -8,7 +8,6 @@ b)
 
 */
 
-<<<<<<< HEAD
 function get_subsidized_buildings() {
   var subsidies = "IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y' OR IS_221D3_IND='y'"
        + " OR IS_221D4_IND='y' OR IS_236_IND='y' OR IS_811_CAPITAL_ADVANCE_IND='y' OR IS_ACC_OLD_IND='y' OR IS_ACC_PERFORMANCE_BASED_IND='y'"
@@ -25,12 +24,21 @@ function get_subsidized_buildings() {
   });
 
   request.done(function(res, msg) {
+    var response = { status: 'failure', data: [] };
     if (!res || res === null || res.status === 'failure') {
       // request went to server but didn't work
       console.log('error');
     } else {
       // request succeeded
-      console.log(res);
+      response.status = 'success';
+      var result = JSON.parse(res);
+      for (var item in res.features) {
+        var curr = {
+
+        };
+        response.data.push(curr);
+      }
+      console.log(response;);
     }
   });
 
@@ -41,7 +49,37 @@ function get_subsidized_buildings() {
 }
 
 function get_population() {
-  
+  var request = $.ajax({
+    url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?where=OBJECTID%255000%3D0&outFields=households%2C+area_median_income&f=pgeojson',
+    type: 'GET',
+    datatype: 'JSON'
+  });
+
+  request.done(function(res, msg) {
+    var response = { status: 'failure', data: [] };
+    if (!res || res === null || res.status === 'failure') {
+      // request went to server but didn't work
+      console.log('error');
+    } else {
+      // request succeeded
+      response.status = 'success';
+      var result = JSON.parse(res);
+      for (var item in result.features) {
+        var curr = {
+          coordinates: result.features[item].geometry.coordinates[0],
+          num_households: result.features[item].properties.households,
+          median_income: result.features[item].properties.area_median_income,
+        }
+        response.data.push(curr);
+      }
+      console.log(response);
+    }
+  });
+
+  // request failed to even make it to server
+  request.fail(function(data, msg) {
+    console.log('couldn\'t hit them');
+  });
 }
 
 //Function to get data for each map rectangle
@@ -62,6 +100,5 @@ function getArrayLoc(dataEntry, mapTopLeft, mapBottomRight, numBlocks){
   //loop for rows and cols
   for(cord=0; cord < 2; cord++){
     blockLen = (mapBottomRight - mapTopLeft)/num
-  }
-  
+  }  
 }
