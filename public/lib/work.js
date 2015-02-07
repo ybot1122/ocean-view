@@ -88,17 +88,36 @@ function get_population() {
 // returns a 2D array with data in each cell
 // Loops through all of the data, and puts each into the correct location in the array
 // Uses the getArrayLoc
-function getMapData(data, mapTopLeft, mapBottomRight, numBlocks){
+// Assumes the data has a corrdinates feild with the center point
+function getMapData(allData, mapTopLeft, mapBottomRight, numBlocks){
+  //Initiialize the block array. Let me know if there's a better way to do this.
+  var blockArray = new Array(numBlocks[0]);
+  for(i = 0; i < blockArray.length; i++)
+      blockArray[i] = new Array(numBlocks[1]);
+
   for (dataNum = 0; dataNum < data.length; dataNum ++){
-     
+    dataEntry = allData[dataNum];
+    dataLoc = dataEntry.coordinates;
+
+    console.log(dataLoc);
+
+    // Use this function to get where the entry belongs in the block array
+    arrayLoc = getArrayLoc(dataLoc, mapTopLeft, mapBottomRight, numBlocks);
+    console.log(arrayLoc);
+    // Add the entry to the appropriate location in the block array
+    blockArray[arrayLoc[0]][arrayLoc[1]] = dataEntry;
   }
+  return blockArray;
 }
   
 // Gives the row and column that the data should belong to in the array
-function getArrayLoc(dataEntry, mapTopLeft, mapBottomRight, numBlocks){
+function getArrayLoc(dataLoc, mapTopLeft, mapBottomRight, numBlocks){
   arrayLoc = [0,0];
   //loop for rows and cols
   for(cord=0; cord < 2; cord++){
-    blockLen = (mapBottomRight - mapTopLeft)/num
-  }  
+    // For each cordinate: calculate which block the location belongs to
+    blockLen = (mapBottomRight[cord] - mapTopLeft[cord])/numBlocks[cord];
+    arrayLoc[cord] = Math.round(dataLoc[cord]/blockLen);
+  }
+  return arrayLoc;
 }
