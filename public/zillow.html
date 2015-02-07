@@ -39,18 +39,25 @@
 				top: 0;
 				position: absolute;
 			}
-			#valueHeatmapUi {
+			#locationFinder {
+				background-color: black;
 				opacity: 0.5;
+			}
+			#locationFinderLabel {
+				color: white;
 			}
 		</style>
 
-		<!-- OUR APP-SPECIFIC JS -->
-		<script src="lib/jquery.js"></script>
-		<script src="lib/work.js"></script>
 	</head>
 	<body>
 		<div id="mapContainer"></div>
-		<div id="uiContainer"></div>
+		<div id="uiContainer">
+			<div id="locationFinder">
+				<div id="locationFinderLabel">We help government make better decision</div>
+				<input type="text" id="text" />
+				<input type="button" id="button" value="Search" />
+			</div>
+		</div>
 		<script type="text/javascript" id="exampleJsSource">
 /*	Setup authentication app_id and app_code 
 *	WARNING: this is a demo-only key
@@ -142,26 +149,6 @@ if (heatmapProvider) {
 		);
 	}, false);
 }
-/* We create a UI notecontainer for example description
- * NoteContainer is a UI helper function and not part of the Maps API for JavaScript
- * See exampleHelpers.js for implementation details 
- */
-var noteContainer = new NoteContainer({
-	id: "valueHeatmapUi",
-	parent: document.getElementById("uiContainer"),
-	title: "Rendering a value based heat map",
-	content:
-		'<p>This heat map example shows how many earthquakes there were in a particular region ' +
-		'using a value heat map (original source: ' + 
-		'<a href="../../../res//kml/usgs/earthquakes.kml" target="_blank">KML data</a> from ' +
-		'U.S. Geological Survey).</p>' +
-		'<p>Heatmap package only works in browsers supporting the HTML5 Canvas element.</p>' +
-		'<p>The following browsers support the Canvas element:</p>' +
-		'<ul><li>Internet Explorer 9+,</li><li>FireFox 2+,</li>' +
-		'<li> Google Chrome 4+,</li><li> Safari 3.1+,</li>' +
-		'<li> Opera 9.0+,</li><li> iOS Safari 3.2+,</li><li> Android Browser 2.2+</li></ul>' +
-		'<input type="text" id="text" /><input type="button" id="button" value="Search" />'
-});
 
 $("input#button").click(function () {
 var searchtext = "seattle";
