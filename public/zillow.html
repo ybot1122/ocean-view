@@ -248,7 +248,7 @@ $("input#button").click(function () {
 var lineVisibility = "30";
 var shapeVisibility = "70";
 
-get_population(10000, 2000, [], function(response) {
+combineResponses(10000, [-123, 30, -114, 40], function(response) {
 // combineResponses(10000, [], function(response) {
 	var blocks = response;
 	console.log(blocks[i]);
@@ -286,10 +286,9 @@ get_population(10000, 2000, [], function(response) {
 		map.objects.add(polygon);
 	}
 
-	get_subsidized_buildings(0, [], function(response) {
-		var buildings = response.slice(0, 1000);
-		for (var i = 0; i < buildings.length; i++) {
-			var building = buildings[i];
+	for (var i = 0; i < blocks.length; i++) {
+		for (var n = 0; n < blocks[i].buildings.length; n++) {
+			var building = blocks[i].buildings[n];
 			var longitude = building.coordinates[0];
 			var latitude = building.coordinates[1];
 			var coordinate = new nokia.maps.geo.Coordinate(latitude, longitude);
@@ -298,7 +297,7 @@ get_population(10000, 2000, [], function(response) {
 			});
 			map.objects.add(marker);
 		}
-	});
+	}
 });
 
 function fillTooltip(block) {

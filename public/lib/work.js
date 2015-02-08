@@ -203,6 +203,8 @@ function combineResponses(max_blocks, latlong, callback) {
         console.log('.');
       }
       console.log('fin, ' + building_to_block + ' out of ' + buildings.length + ' buildings successfully mapped to a block');
+      console.log('compiling final result set...');
+      /*
       var result = [];
       for (var n = 0; n < blocks.length; n++) {
         var center = blockCentroid(blocks[n].coordinates);
@@ -210,7 +212,8 @@ function combineResponses(max_blocks, latlong, callback) {
           result.push(blocks[i]);
         }
       }
-      callback(result);
+      */
+      callback(blocks);
     });
   });
 };
