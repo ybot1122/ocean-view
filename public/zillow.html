@@ -83,75 +83,6 @@ var map = new nokia.maps.map.Display(mapContainer, {
 	zoomLevel: 4
 });
 
-var heatmapProvider;
-var colorizeAPI = {
-	/* Points on the heat map are colorized using the color-stops (range 0 - 1)
-	 * The highest data points will get a color defined by 1 and the 
-	 * the lower your data points get they will get a color defined by 0
-	 */
-	stops: {
-		"0": "#E8680C",
-		"0.25": "#F5A400",
-		"0.5": "#FF9000",
-		"0.75": "#FF4600",
-		"1": "#F51F00"
-	},
-	// Whether we should interpolate between the stops to create a smooth color gradient
-	interpolate: true
-};
-try {
-	// Creating Heatmap overlay
-	heatmapProvider = new nokia.maps.heatmap.Overlay({
-		// How to color the heatmap
-		colors: colorizeAPI,
-		// This is the greatest zoom level for which the overlay will provide tiles
-		max: 20,
-		// This is the overall opacity applied to this overlay
-		opacity: 0.6,
-		// Defines if our heatmap is value or density based
-		type: "value",
-		// Coarseness defines the resolution with which the heat map is created.
-		coarseness: 2
-	});
-} catch (e) {
-	// The heat map overlay constructor throws an exception if there
-	// is no canvas support in the browser
-	alert(typeof e == "string" ? e : e.message);
-}
-// Only start loading data if the heat map overlay was successfully created
-if (heatmapProvider) {
-	// Trigger the load of data, after the map emmits the "displayready" event
-	map.addListener("displayready", function () {
-		/* We load a data file containing data points for the heat map
-		 * LoadScript is an helper function and not part of the Maps API for JavaScript
-		 * See exampleHelpers.js for implementation details 
-		 */
-		loadScript(
-			"http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/res/earthquakes.js", 
-			function () {
-				/**
-				 * Filtering data to show only eartquakes with magnitud above 4.5. Variable data comes from script inserted in head (heatmap.js)
-				 * This file is array of objects like:
-				 * data = [
-				 * 		{latitude: 53, longitude: 13: value 5.3},
-				 * 		....
-				 * ];
-				 */
-
-				for (var i = 0; i < data.length; i++) {
-					if (data[i].value < 4.5) {
-						data.splice(i, 1);
-					}
-				}
-				
-				// Rendering the heat map overlay onto the map
-				heatmapProvider.addData(data);
-				map.overlays.add(heatmapProvider);
-			}
-		);
-	}, false);
-}
-
 $("input#button").click(function () {
 var searchtext = "seattle";
 	var url = "http://geocoder.cit.api.here.com/6.2/geocode.json?"
@@ -175,7 +106,9 @@ get_population(10000, function(response) {
 		var coordinates = blocks[i].coordinates;
 		if (coordinates.length == 1)
 			coordinates = coordinates[0];
-		var ncs = []
+		var ncs = [];
+		var color = colorize(Math.log(20000), Math.log(100000), Math.log(blocks[i].median_income));
+		// console.log(color);
 		for (var j = 0; j < coordinates.length; j++) {
 			var longitude = coordinates[j][0];
 			var latitude = coordinates[j][1];
@@ -183,11 +116,45 @@ get_population(10000, function(response) {
 		};
 		map.objects.add(new nokia.maps.map.Polygon(ncs, {
 			pen: { strokeColor: "#000", lineWidth: 1 },
-			brush: { color: "#C22A" }
+			brush: { color: color}
+			// brush: { color: "#C22A" }
 		}));
 	}
 });
 
+function colorize(min, max, value) {
+  var quarter1 = min + (max - min) * 0.25;
+  var quarter2 = min + (max - min) * 0.5;
+  var quarter3 = min + (max - min) * 0.75;
+  if (value >= max)
+    return "#FF0000";
+  else if (value >= quarter3) {
+    var g = Math.round((max - value) / (max - quarter3) * 256 - 1);
+    return "#FF" + dec2hex(g) + "00";
+  }
+  else if (value >= quarter2) {
+    var r = Math.round((value - quarter2) / (quarter3 - quarter2) * 256);
+    return "#" + dec2hex(r) + "FF00";
+  }
+  else if (value >= quarter1) {
+    var b = Math.round((quarter2 - value) / (quarter2 - quarter1) * 256 - 1);
+    return "#00FF" + dec2hex(b);
+  }
+  else if (value >= min) {
+    var g = Math.round((value - min) / (quarter1 - min) * 256);
+    return "#00" + dec2hex(g) + "FF";
+  }
+  else
+    return "#0000FF";
+}
+
+function dec2hex(dec) {
+	var hex = dec.toString(16);
+	if (hex.length < 2)
+		return "0" + hex;
+	else
+		return hex;
+}
 
 		</script>
 	</body>
