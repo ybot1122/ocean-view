@@ -1,37 +1,43 @@
+// longitude, latitude everytime
 
+/*
+  GRAB DATA FROM PUBLIC HOUSING ALSO
+
+  AGGREGATE ASSISTED UNIT COUNTS
+
+  ARRAY OF BUILDING LAT/LONG
+*/
 // returns list of coordinates for buildings that qualify for a subsidy program
 function get_subsidized_buildings(start, cumulative, callback) {
-  console.log('start:' + start);
   var end = start + 1000;
-  if (end >= 5000) {
-    callback(cumulative);
-    return;
-  }
+  console.log('retrieving results from MULTIFAMILY PROPERTIES: ' + start + ' to ' + end);
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MultiFamilyProperties/FeatureServer/0/query?where='
         + "(IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y')"
-        + " AND (OBJECTID >= " + start + " AND OBJECTID < " + end + ")&f=geojson",
+        + " AND (OBJECTID >= " + start + " AND OBJECTID < " + end + ")&outFields=LAT%2C+LON&f=geojson",
     type: 'GET',
     datatype: 'JSON'
   });
 
   request.done(function(res, msg) {
-    var response = [];
     if (!res || res === null) {
       // request went to server but didn't work
       console.log('error');
     } else {
       // request succeeded
       var result = JSON.parse(res);
-      console.log(result);
+      // ASSUME: if no result found in 1000 consecutive rows, then we are finished
+      if (result.features.length == 0) {
+        console.log('fin, found ' + cumulative.length + ' items');
+        callback(cumulative);
+        return;
+      }
       for (var item in result.features) {
         var curr = {
-          coordinates: result.features[item].geometry.coordinates
+          coordinates: [result.features[item].properties.LON, result.features[item].properties.LAT]
         };
-        response.push(curr);
+        cumulative.push(curr);
       }
-      console.log(response);
-      cumulative.concat(response);
       get_subsidized_buildings(end, cumulative, callback);
     }
   });
@@ -43,14 +49,13 @@ function get_subsidized_buildings(start, cumulative, callback) {
   });
 }
 
+/*
+  FIGURE OUT OVERLAPPING RINGS
+*/
 // returns list of 'blocks' with each group 
-function get_population(start, callback) {
+function get_population(start, max, cumulative, callback) {
   var end = start + 1000;
-  console.log('retrieving results: ' + start + ' to ' + end);
-  if (end >= 15000) {
-    console.log('fin');
-    return;
-  }
+  console.log('retrieving results from LOCATION AFFORDABILITY INDEX: ' + start + ' to ' + end);
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?'
         + 'where=OBJECTID >= ' + start + ' AND OBJECTID < ' + end 
@@ -67,6 +72,11 @@ function get_population(start, callback) {
     } else {
       // request succeeded
       var result = JSON.parse(res);
+      if (result.features.length == 0) {
+        console.log('fin, found ' + cumulative.length + ' items [parsed entire dataset]');
+        callback(cumulative);
+        return;
+      }
       for (var item in result.features) {
         for (var ring in result.features[item].geometry.coordinates) {
           var curr = {
@@ -74,14 +84,18 @@ function get_population(start, callback) {
             num_households: result.features[item].properties.households,
             median_income: result.features[item].properties.area_median_income,
             med_inc_renters:  result.features[item].properties.blkgrp_median_income_renters,
-            num_renters: result.features[item].properties.pct_renters * result.features[item].properties.households
+            num_renters: result.features[item].properties.pct_renters * result.features[item].properties.households,
+            num_buildings: 0
           }
-          response.push(curr);
+          cumulative.push(curr);
+          if (cumulative.length >= max) {
+            console.log('fin, found ' + cumulative.length + ' items');
+            callback(cumulative);
+            return;
+          }
         }
       }
-      console.log(response[0]);
-      callback(response);
-      get_population(end, callback);
+      get_population(end, max, cumulative, callback);
     }
   });
 
@@ -101,47 +115,49 @@ function get_population(start, callback) {
     pop_size: the population value
   }
 */
-function combineResponses() {
-  get_subsidized_buildings(function(a) {
+function combineResponses(max_blocks, callback) {
+  get_subsidized_buildings(0, [], function(a) {
     var buildings = a;
-    get_population(function(b) {
+    get_population(0, max_blocks, [], function(b) {
       var blocks = b;
-      for (var build in buildings.data) {
+      var found = 0;
+      for (var build in buildings) {
         // ASSUMPTION: no two block polygons overlap each other
-        var buildingLoc = buildings.data[build].coordinates;
-        var i = 0;
-        while (i < blocks.data.length && !pointInPoly(buildingLoc, blocks.data[i].coordinates)) {
-          i++;
+        var buildingLoc = buildings[build].coordinates;
+        for (var i = 0; i < blocks.length; i++) {
+          if (pointInPoly(buildingLoc, blocks[i].coordinates)) {
+            blocks[i].num_buildings += 1;
+            break;
+          }
         }
-        if (i >= blocks.data.length) {
-          console.log(buildingLoc);
+        if (i < blocks.length) {
+          found += 1;
         }
       }
+      console.log('fin, ' + found + ' buildings successfully mapped to a block');
+      callback(blocks);
     });
   });
 }
 
 function pointInPoly(point, vs) {
-  var min_x = vs[0][0];
-  var min_y = vs[0][1];
-  var max_x = min_x;
-  var max_y = min_y;
-  for (var i = 1; i < vs.length; i++) {
-    if (vs[i][0] < min_x) {
-      min_x = vs[i][0];
+    // ray-casting algorithm based on
+    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    
+    var x = point[0], y = point[1];
+    
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+        
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
     }
-    if (vs[i][0] > max_x) {
-      max_x = vs[i][0];
-    }
-    if (vs[i][1] < min_y) {
-      min_y = vs[i][1];
-    }
-    if (vs[i][1] > max_y) {
-      max_y = vs[i][1];
-    }
-  }
-  return point[0] >= min_x && point[0] <= max_x && point[1] >= min_y && point[1] <= max_y;
-}
+    
+    return inside;
+};
 
 // Function to get data for each map rectangle
 // Uses the location to put the data in the correct cell
