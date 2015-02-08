@@ -13,8 +13,9 @@ function get_subsidized_buildings(start, cumulative, callback) {
   console.log('retrieving results from MULTIFAMILY PROPERTIES: ' + start + ' to ' + end);
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MultiFamilyProperties/FeatureServer/0/query?where='
-        + "(IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y')"
-        + " AND (OBJECTID >= " + start + " AND OBJECTID < " + end + ")&outFields=LAT%2C+LON&f=geojson",
+        + "(IS_202_811_IND = 'y' OR IS_SEC8_IND = 'y' OR IS_RENT_SUPPLEMENT_IND = 'y')"
+        + " AND (OBJECTID >= " + start + " AND OBJECTID < " + end + ")&outFields=LAT%2C+LON%2C+TOTAL_ASSISTED_UNIT_COUNT%2C+"
+        + "CLIENT_GROUP_TYPE&f=geojson",
     type: 'GET',
     datatype: 'JSON'
   });
@@ -26,6 +27,7 @@ function get_subsidized_buildings(start, cumulative, callback) {
     } else {
       // request succeeded
       var result = JSON.parse(res);
+      console.log(result);
       // ASSUME: if no result found in 1000 consecutive rows, then we are finished
       if (result.features.length == 0) {
         console.log('fin, found ' + cumulative.length + ' items');
@@ -34,7 +36,9 @@ function get_subsidized_buildings(start, cumulative, callback) {
       }
       for (var item in result.features) {
         var curr = {
-          coordinates: [result.features[item].properties.LON, result.features[item].properties.LAT]
+          coordinates: [result.features[item].properties.LON, result.features[item].properties.LAT],
+          num_asst_units: result.features[item].properties.TOTAL_ASSISTED_UNIT_COUNT,
+          type: result.features[item].properties.CLIENT_GROUP_TYPE
         };
         cumulative.push(curr);
       }
@@ -85,7 +89,9 @@ function get_population(start, max, cumulative, callback) {
             median_income: result.features[item].properties.area_median_income,
             med_inc_renters:  result.features[item].properties.blkgrp_median_income_renters,
             num_renters: result.features[item].properties.pct_renters * result.features[item].properties.households,
-            num_buildings: 0
+            num_buildings: 0,
+            num_asst_units: 0,
+            buildings: []
           }
           cumulative.push(curr);
           if (cumulative.length >= max) {
@@ -127,14 +133,20 @@ function combineResponses(max_blocks, callback) {
         for (var i = 0; i < blocks.length; i++) {
           if (pointInPoly(buildingLoc, blocks[i].coordinates)) {
             blocks[i].num_buildings += 1;
+            blocks[i].num_asst_units += buildings[build].num_asst_units;
+            blocks[i].buildings.push({
+              coordinates: buildings[build].coordinates,
+              type: buildings[build].type
+            });
             break;
           }
         }
         if (i < blocks.length) {
           found += 1;
         }
+        console.log('.');
       }
-      console.log('fin, ' + found + ' buildings successfully mapped to a block');
+      console.log('fin, ' + found + ' out of ' + buildings.length + ' buildings successfully mapped to a block');
       callback(blocks);
     });
   });
