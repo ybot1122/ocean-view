@@ -19,10 +19,6 @@
 		<!-- JavaScript for example container (NoteContainer & Logger)  -->
 		<script type="text/javascript" charset="UTF-8" src="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/templates/js/exampleHelpers.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-		<script>
-		 function myFunction() {
-              location.href = "zillow copy.html"; }
-		</script>
 		<style type="text/css">
 			html {
 				overflow:hidden;
@@ -44,7 +40,7 @@
 				top: 0;
 				position: absolute;
 			}
-			#uiContainer{
+			/*#uiContainer{
               width: 100%;
               padding: 8% 0;
 			}
@@ -81,7 +77,71 @@
               border-radius: 5px;
               margin-right: 2%;
               margin-top: 2%;
+			}*/
+			/*Location find*/
+			#uiContainer{
+              width: 20%;
+              height: auto;
+              padding: 2% 0;
 			}
+			#locationFinder {
+			    padding: 6% 0;
+				background-color: #3BC1C3;
+				opacity: 0.8;
+			}
+			#button{
+				padding-left: 10px;
+           }
+
+			.text{
+             margin-left: 2%;
+			}
+
+			/*Filter*/
+			#filter{
+				padding: 6% 0;
+				background-color: #9B9B9B;
+				opacity: 0.8;
+			}
+
+			#options{
+				margin-left: 2%;
+			}
+
+			#explain{
+				padding: 6% 0;
+				background-color: #868586;
+				opacity: 0.8;
+			}
+			#tooltip{
+				padding-left: 3%;
+			}
+			#legend{
+				padding: 6% 0;
+				background-color: #656465;
+				opacity: 0.8;
+			}
+            .title{
+                font-size: 16px;
+                color: white;
+                padding-left: 3%;
+                padding-bottom: 2%;
+            }
+            /*Legend*/
+            #colorbar{
+            	position: relative;
+            	right: 20px;
+            	padding-left: 2%;
+            }
+            #low{
+            	display: inline-block;
+            	padding-left: 2%;
+            }
+            #high{
+            	display: inline-block;
+            	padding-left: 190px;
+            }
+            
 
 		</style>
 		<!-- APPLICATION SPECIFIC JS -->
@@ -91,7 +151,7 @@
 	</head>
 	<body>
 		<div id="mapContainer"></div>
-		<div id="uiContainer" style="display: none;">
+		<!--<div id="uiContainer" style="">
 			<div id="locationFinder">
 				<div id="locationFinderLabel">We help government make better decision</div>
 				<div id="search">
@@ -99,7 +159,45 @@
 					<input type="button" class="button" id="button" value="Search" onclick="myFunction()"/>
 				</div>
 			</div>
+		</div>-->
+		<div id="uiContainer">
+			<div id="locationFinder">
+				<div id="search">
+				   <div class="title">Select an area</div>
+					<input type="text" class="text" value="cityname/zipcode.." id="text"  />
+					<input type="button" class="button" id="button" value="Search"/>
+				</div>
+			</div>
+			<div id="filter">
+				<div id="search">
+				    <div class="title">Filter</div>
+				    <div id="options">
+						<input type="checkbox" name="low" value="low"> Low-income family<br>
+						<input type="checkbox" name="disabled" value="disabled"> Disabled<br>
+						<input type="checkbox" name="senior" value="senior"> Senior<br>
+					</div>
+				</div>
+			</div>
+			<div id="explain">
+				<div id="search">
+				    <div class="title">Tooltips</div>
+					<div id="tooltip"></div>
+				</div>
+			</div>
+			<div id="legend">
+				<div id="search">
+				    <div class="title">Legend
+				     	<img src="img/legend.png" alt="">
+				     </div>
+
+				    <div id="legendnumber">
+					    <p id="low">1000</p>
+					    <p id="high">10000</p>
+				    </div>
+				</div>
+			</div>
 		</div>
+
 		<script type="text/javascript" id="exampleJsSource">
 /*	Setup authentication app_id and app_code 
 *	WARNING: this is a demo-only key
@@ -125,8 +223,13 @@ var map = new nokia.maps.map.Display(mapContainer, {
 	zoomLevel: 4
 });
 
+$("input#text").keyup(function(event){
+    if(event.keyCode == 13){
+        $("input#button").click();
+    }
+});
+
 $("input#button").click(function () {
-var searchtext = "seattle";
 	var url = "http://geocoder.cit.api.here.com/6.2/geocode.json?"
 		+ "searchtext=" + $("input#text").val()
 		+ "&app_id=DemoAppId01082013GAL"
@@ -145,34 +248,78 @@ var searchtext = "seattle";
 var lineVisibility = "30";
 var shapeVisibility = "70";
 
-get_population(5000, 5000, [], function(response) {
-	// console.log(blocks[0]);
+get_population(10000, 2000, [], function(response) {
+// combineResponses(10000, [], function(response) {
 	var blocks = response;
+	console.log(blocks[i]);
+
 	for (var i = 0; i < blocks.length; i++) {
-		var coordinates = blocks[i].coordinates;
+		var block = blocks[i];
+
+		var coordinates = block.coordinates;
 		if (coordinates.length == 1)
 			coordinates = coordinates[0];
+
 		var ncs = [];
-		var color = colorize(Math.log(20000), Math.log(100000), Math.log(blocks[i].median_income));
-		// console.log(color);
 		for (var j = 0; j < coordinates.length; j++) {
 			var longitude = coordinates[j][0];
 			var latitude = coordinates[j][1];
 			ncs[ncs.length] = new nokia.maps.geo.Coordinate(latitude, longitude);
 		};
+
+		var color = colorize(Math.log(20000), Math.log(100000), Math.log(block.median_income));
 		var polygon = new nokia.maps.map.Polygon(ncs, {
 			pen: { strokeColor: "#000000" + lineVisibility, lineWidth: 1 },
 			brush: { color: color }
 		});
-		map.objects.add(polygon);
+		polygon.block = block;
+
+		if (block.buildings.length > 0) {
+			console.log(block);
+			console.log(i);
+		}
+
 		// On mouse click we fire off the default event handler
+		polygon.addListener("click", clickHandler);
 		polygon.addListener("mouseenter", enterHandler);
 		polygon.addListener("mouseleave", leaveHandler);
+		map.objects.add(polygon);
 	}
+
+	get_subsidized_buildings(0, [], function(response) {
+		var buildings = response.slice(0, 1000);
+		for (var i = 0; i < buildings.length; i++) {
+			var building = buildings[i];
+			var longitude = building.coordinates[0];
+			var latitude = building.coordinates[1];
+			var coordinate = new nokia.maps.geo.Coordinate(latitude, longitude);
+			var marker = new nokia.maps.map.StandardMarker(coordinate, {
+				brush: { color: "#3BC1c3" }
+			});
+			map.objects.add(marker);
+		}
+	});
 });
 
-var enterHandler = function (evt) {
+function fillTooltip(block) {
+	var median_income=Math.round(block.med_inc_renters);
+	return "Median Income of Renters" + "<br />"+ median_income + "<br />"
+		+ "Assisted Units" + "<br />"
+		+ block.num_asst_units + "<br />"
+		+ "Federal Assited Buildings" + "<br />"
+		+ block.num_buildings + "<br />"
+		+ "Total Renter Hoursehold" +  "<br />"
+		+ block.num_households;
+}
+
+var lastClicked = null;
+function clickHandler(evt) {
+	if (lastClicked)
+		lastClicked.brushSetter({ color: lastClicked.fillColor.substring(0, 7) + shapeVisibility});
 	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	lastClicked = evt.target;
+	$("div#tooltip").html(fillTooltip(evt.target.block));
+
 	/* Normally on certain events like double click the map zooms in 
 	 * we would like to prevent this behavior when clicking a 
 	 * Spatial object (Circle, Rectangle, Polyline or Polygon)
@@ -183,13 +330,22 @@ var enterHandler = function (evt) {
 		 */
 		evt.stopImmediatePropagation();
 	}
-};
+}
 
-var leaveHandler = function (evt) {
-	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + shapeVisibility});
+function enterHandler(evt) {
+	if (evt.target != lastClicked)
+		evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	if (evt.target instanceof nokia.maps.map.Spatial) {
+		evt.stopImmediatePropagation();
+	}
+}
+
+function leaveHandler(evt) {
+	if (evt.target != lastClicked)
+		evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + shapeVisibility});
 	if (evt.target instanceof nokia.maps.map.Spatial)
 		evt.stopImmediatePropagation();
-};
+}
 
 function colorize(min, max, value) {
   var quarter1 = min + (max - min) * 0.25;
@@ -216,6 +372,22 @@ function colorize(min, max, value) {
   else
     return "#0000FF" + shapeVisibility;
 }
+
+$("input#text").each(function ()
+{
+    var v = this.value;
+
+    $(this).blur(function ()
+    {
+        // if input is empty, reset value to default 
+        if (this.value.length == 0) this.value = v;
+    }).focus(function ()
+    {
+        // when input is focused, clear its contents
+        this.value = "";
+    }); 
+});
+
 
 function dec2hex(dec) {
 	var hex = dec.toString(16);
