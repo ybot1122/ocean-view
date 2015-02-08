@@ -236,34 +236,61 @@ $("input#button").click(function () {
 var lineVisibility = "30";
 var shapeVisibility = "70";
 
-get_population(15000, 6000, [], function(response) {
-	// console.log(blocks[0]);
+get_population(12000, 3000, [], function(response) {
+// combineResponses(10000, [], function(response) {
 	var blocks = response;
+
 	for (var i = 0; i < blocks.length; i++) {
-		var coordinates = blocks[i].coordinates;
+		var block = blocks[i];
+
+		var coordinates = block.coordinates;
 		if (coordinates.length == 1)
 			coordinates = coordinates[0];
+
 		var ncs = [];
-		var color = colorize(Math.log(20000), Math.log(100000), Math.log(blocks[i].median_income));
-		// console.log(color);
 		for (var j = 0; j < coordinates.length; j++) {
 			var longitude = coordinates[j][0];
 			var latitude = coordinates[j][1];
 			ncs[ncs.length] = new nokia.maps.geo.Coordinate(latitude, longitude);
 		};
+
+		var color = colorize(Math.log(20000), Math.log(100000), Math.log(block.median_income));
 		var polygon = new nokia.maps.map.Polygon(ncs, {
 			pen: { strokeColor: "#000000" + lineVisibility, lineWidth: 1 },
 			brush: { color: color }
 		});
-		map.objects.add(polygon);
+		polygon.block = block;
+
+		if (block.buildings.length > 0) {
+			console.log(block);
+			console.log(i);
+		}
+
 		// On mouse click we fire off the default event handler
+		polygon.addListener("click", clickHandler);
 		polygon.addListener("mouseenter", enterHandler);
 		polygon.addListener("mouseleave", leaveHandler);
+		map.objects.add(polygon);
 	}
 });
 
-var enterHandler = function (evt) {
+function fillTooltip(block) {
+	return "med_inc_renters: " + Math.round(block.med_inc_renters) + "<br />"
+		+ "median_income: " + block.median_income + "<br />"
+		+ "num_asst_units: " + block.num_asst_units + "<br />"
+		+ "num_buildings: " + block.num_buildings + "<br />"
+		+ "num_households: " + block.num_households + "<br />"
+		+ "num_renters: " + Math.round(block.num_renters);
+}
+
+var lastClicked = null;
+function clickHandler(evt) {
+	if (lastClicked)
+		lastClicked.brushSetter({ color: lastClicked.fillColor.substring(0, 7) + shapeVisibility});
 	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	lastClicked = evt.target;
+	$("div#tooltip").html(fillTooltip(evt.target.block));
+
 	/* Normally on certain events like double click the map zooms in 
 	 * we would like to prevent this behavior when clicking a 
 	 * Spatial object (Circle, Rectangle, Polyline or Polygon)
@@ -274,13 +301,22 @@ var enterHandler = function (evt) {
 		 */
 		evt.stopImmediatePropagation();
 	}
-};
+}
 
-var leaveHandler = function (evt) {
-	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + shapeVisibility});
+function enterHandler(evt) {
+	if (evt.target != lastClicked)
+		evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	if (evt.target instanceof nokia.maps.map.Spatial) {
+		evt.stopImmediatePropagation();
+	}
+}
+
+function leaveHandler(evt) {
+	if (evt.target != lastClicked)
+		evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + shapeVisibility});
 	if (evt.target instanceof nokia.maps.map.Spatial)
 		evt.stopImmediatePropagation();
-};
+}
 
 function colorize(min, max, value) {
   var quarter1 = min + (max - min) * 0.25;
