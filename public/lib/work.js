@@ -44,7 +44,14 @@ function get_subsidized_buildings(start, cumulative, callback) {
 }
 
 // returns list of 'blocks' with each group 
-function get_population(callback) {
+function get_population(start, cumulative, callback) {
+  var end = start + 1000;
+  console.log('retrieving results: ' + start + ' to ' + end);
+  if (end >= 200000) {
+    console.log('total results: ' + cumulative.length);
+    callback(cumulative);
+    return;
+  }
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?'
         + 'where=OBJECTID%251%3D0&outFields=households%2C+area_median_income&outSR={"wkid":4326}&f=geojson',
@@ -53,13 +60,12 @@ function get_population(callback) {
   });
 
   request.done(function(res, msg) {
-    var response = { status: 'failure', data: [] };
+    var response = [];
     if (!res || res === null || res.status === 'failure') {
       // request went to server but didn't work
       console.log('function: get_population encountered error');
     } else {
       // request succeeded
-      response.status = 'success';
       var result = JSON.parse(res);
       for (var item in result.features) {
         for (var ring in result.features[item].geometry.coordinates) {
@@ -68,10 +74,11 @@ function get_population(callback) {
             num_households: result.features[item].properties.households,
             median_income: result.features[item].properties.area_median_income,
           }
-          response.data.push(curr);
+          response.push(curr);
         }
       }
-      callback(response);
+      var con_array = cumulative.concat(response);
+      get_population(end, con_array, callback);
     }
   });
 
