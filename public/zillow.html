@@ -169,8 +169,8 @@ var searchtext = "seattle";
 	});
 });
 
-get_population(0, [], function(response) {
-	var blocks = response.data;
+get_population(0, function(response) {
+	var blocks = response;
 	for (var i = 0; i < blocks.length; i++) {
 		var coordinates = blocks[i].coordinates;
 		if (coordinates.length == 1)

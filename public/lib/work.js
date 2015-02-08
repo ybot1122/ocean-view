@@ -44,12 +44,10 @@ function get_subsidized_buildings(start, cumulative, callback) {
 }
 
 // returns list of 'blocks' with each group 
-function get_population(start, cumulative, callback) {
+function get_population(start, callback) {
   var end = start + 1000;
   console.log('retrieving results: ' + start + ' to ' + end);
   if (end >= 200000) {
-    console.log('total results: ' + cumulative.length);
-    callback(cumulative);
     return;
   }
   var request = $.ajax({
@@ -77,8 +75,8 @@ function get_population(start, cumulative, callback) {
           response.push(curr);
         }
       }
-      var con_array = cumulative.concat(response);
-      get_population(end, con_array, callback);
+      callback(response);
+      get_population(end, callback);
     }
   });
 
