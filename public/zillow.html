@@ -169,33 +169,26 @@ var searchtext = "seattle";
 	});
 });
 
-var blocks;
 get_population(function(response) {
-	blocks = response;
-	console.log(blocks);
+	var blocks = response.data;
 	for (var i = 0; i < blocks.length; i++) {
-	 	console.log(blocks[i]);
-	};
+		var coordinates = blocks[i].coordinates;
+		if (coordinates.length == 1)
+			coordinates = coordinates[0];
+		var ncs = []
+		for (var j = 0; j < coordinates.length; j++) {
+			var longitude = coordinates[j][0];
+			var latitude = coordinates[j][1];
+			ncs[ncs.length] = new nokia.maps.geo.Coordinate(latitude, longitude);
+		};
+		map.objects.add(new nokia.maps.map.Polygon(ncs, {
+			pen: { strokeColor: "#000", lineWidth: 1 },
+			brush: { color: "#C22A" }
+		}));
+	}
 });
 
-// map.objects.add(new nokia.maps.map.Polygon(
-// 	[
-// 		new nokia.maps.geo.Coordinate(50.2001, 8.6381),
-// 		new nokia.maps.geo.Coordinate(50.2190, 8.5474),
-// 		new nokia.maps.geo.Coordinate(50.2001, 8.5337),
-// 		new nokia.maps.geo.Coordinate(50.1799, 8.4774),
-// 		new nokia.maps.geo.Coordinate(50.1693, 8.4664),
-// 		new nokia.maps.geo.Coordinate(50.1522, 8.4657),
-// 		new nokia.maps.geo.Coordinate(50.1205, 8.5310),
-// 		new nokia.maps.geo.Coordinate(50.1363, 8.5879),
-// 		new nokia.maps.geo.Coordinate(50.1882, 8.6168)
-		
-// 	],
-// 	{
-// 		pen: { strokeColor: "#000", lineWidth: 1 },
-// 		brush: { color: "#C22A" }
-// 	}
-// ));
+
 		</script>
 	</body>
 </html>
