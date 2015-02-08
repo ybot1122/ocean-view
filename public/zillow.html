@@ -274,11 +274,6 @@ combineResponses(10000, [-123, 30, -114, 40], function(response) {
 		});
 		polygon.block = block;
 
-		if (block.buildings.length > 0) {
-			console.log(block);
-			console.log(i);
-		}
-
 		// On mouse click we fire off the default event handler
 		polygon.addListener("click", clickHandler);
 		polygon.addListener("mouseenter", enterHandler);
