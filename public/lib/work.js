@@ -1,36 +1,38 @@
 
 // returns list of coordinates for buildings that qualify for a subsidy program
-function get_subsidized_buildings(callback) {
-  var subsidies = "IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y' OR IS_221D3_IND='y'"
-       + " OR IS_221D4_IND='y' OR IS_236_IND='y' OR IS_811_CAPITAL_ADVANCE_IND='y' OR IS_ACC_OLD_IND='y' OR IS_ACC_PERFORMANCE_BASED_IND='y'"
-       + " OR IS_ACTIVE_DEC_CASE_IND='y' OR IS_AFS_REQUIRED_IND='y' OR IS_ALL_CONTRACT_PIPELINE_IND='y' OR IS_ALL_FINANCING_PIPELINE_IND='y'"
-       + " OR IS_ASSISTED_LIVING_IND='y' OR IS_BMIR_IND='y' OR IS_BOARD_AND_CARE_IND='y' OR IS_CO_INSURED_IND='y' OR IS_FLEXIBLE_SUBSIDY_IND='y'"
-       + " OR IS_GREEN_RETROFIT_IND='y' OR IS_HOSPITAL_IND='y' OR IS_HUD_HELD_IND='y' OR IS_HUD_OWNED_IND='y' OR IS_IN_DEFAULT_DELINQUENT_IND='y'"
-       + " OR IS_INSURED_IND='y' OR IS_MIP_IND='y' OR IS_NON_INSURED_IND='y' OR IS_NURSING_HOME_IND='y'";
-
+function get_subsidized_buildings(start, cumulative, callback) {
+  console.log('start:' + start);
+  var end = start + 1000;
+  if (end >= 5000) {
+    callback(cumulative);
+    return;
+  }
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MultiFamilyProperties/FeatureServer/0/query?where='
-        + subsidies + '&f=geojson',
+        + "(IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y')"
+        + " AND (OBJECTID >= " + start + " AND OBJECTID < " + end + ")&f=geojson",
     type: 'GET',
     datatype: 'JSON'
   });
 
   request.done(function(res, msg) {
-    var response = { status: 'failure', data: [] };
-    if (!res || res === null || res.status === 'failure') {
+    var response = [];
+    if (!res || res === null) {
       // request went to server but didn't work
       console.log('error');
     } else {
       // request succeeded
-      response.status = 'success';
       var result = JSON.parse(res);
+      console.log(result);
       for (var item in result.features) {
         var curr = {
           coordinates: result.features[item].geometry.coordinates
         };
-        response.data.push(curr);
+        response.push(curr);
       }
-      callback(response);
+      console.log(response);
+      cumulative.concat(response);
+      get_subsidized_buildings(end, cumulative, callback);
     }
   });
 
@@ -45,7 +47,7 @@ function get_subsidized_buildings(callback) {
 function get_population(callback) {
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?'
-        + 'where=OBJECTID%251%3D0&outFields=households%2C+area_median_income&f=pgeojson',
+        + 'where=OBJECTID%251%3D0&outFields=households%2C+area_median_income&outSR={"wkid":4326}&f=geojson',
     type: 'GET',
     datatype: 'JSON'
   });
@@ -54,7 +56,7 @@ function get_population(callback) {
     var response = { status: 'failure', data: [] };
     if (!res || res === null || res.status === 'failure') {
       // request went to server but didn't work
-      console.log('error');
+      console.log('function: get_population encountered error');
     } else {
       // request succeeded
       response.status = 'success';
@@ -75,7 +77,7 @@ function get_population(callback) {
 
   // request failed to even make it to server
   request.fail(function(data, msg) {
-    console.log('couldn\'t hit them');
+    console.log('function: get_population couldn\'t hit server');
     callback({status: 'failure'});
   });
 }
@@ -101,29 +103,34 @@ function combineResponses() {
         while (i < blocks.data.length && !pointInPoly(buildingLoc, blocks.data[i].coordinates)) {
           i++;
         }
-        console.log(buildingLoc);
+        if (i >= blocks.data.length) {
+          console.log(buildingLoc);
+        }
       }
     });
   });
 }
 
-/*
-  checks if a point is contained within a polygon
-  credit: https://github.com/substack
-*/
 function pointInPoly(point, vs) {
-  // ray-casting algorithm based on
-  // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-  var x = point[0], y = point[1];
-  var inside = false;
-  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-    var xi = vs[i][0], yi = vs[i][1];
-    var xj = vs[j][0], yj = vs[j][1];
-    var intersect = ((yi > y) != (yj > y))
-        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-    if (intersect) inside = !inside;
+  var min_x = vs[0][0];
+  var min_y = vs[0][1];
+  var max_x = min_x;
+  var max_y = min_y;
+  for (var i = 1; i < vs.length; i++) {
+    if (vs[i][0] < min_x) {
+      min_x = vs[i][0];
+    }
+    if (vs[i][0] > max_x) {
+      max_x = vs[i][0];
+    }
+    if (vs[i][1] < min_y) {
+      min_y = vs[i][1];
+    }
+    if (vs[i][1] > max_y) {
+      max_y = vs[i][1];
+    }
   }
-  return inside;
+  return point[0] >= min_x && point[0] <= max_x && point[1] >= min_y && point[1] <= max_y;
 }
 
 // Function to get data for each map rectangle
