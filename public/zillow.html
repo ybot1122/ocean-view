@@ -113,6 +113,9 @@
 				background-color: #868586;
 				opacity: 0.8;
 			}
+			#tooltip{
+				padding-left: 3%;
+			}
 			#legend{
 				padding: 6% 0;
 				background-color: #656465;
@@ -126,12 +129,19 @@
             }
             /*Legend*/
             #colorbar{
-            	padding-left:2%;
+            	position: relative;
+            	right: 20px;
+            	padding-left: 2%;
             }
-            #legendnumber{
+            #low{
             	display: inline-block;
+            	padding-left: 2%;
             }
-
+            #high{
+            	display: inline-block;
+            	padding-left: 190px;
+            }
+            
 
 		</style>
 		<!-- APPLICATION SPECIFIC JS -->
@@ -161,7 +171,6 @@
 				<div id="search">
 				    <div class="title">Filter</div>
 				    <div id="options">
-						<input type="checkbox" name="e-low" value="e-low"> Public housing<br>
 						<input type="checkbox" name="low" value="low"> Low-income family<br>
 						<input type="checkbox" name="disabled" value="disabled"> Disabled<br>
 						<input type="checkbox" name="senior" value="senior"> Senior<br>
@@ -176,8 +185,10 @@
 			</div>
 			<div id="legend">
 				<div id="search">
-				    <div class="title">Legend</div>
-				    <img src="img/legend.png" alt="" id＝"colorbar">
+				    <div class="title">Legend
+				     	<img src="img/legend.png" alt="">
+				     </div>
+
 				    <div id="legendnumber">
 					    <p id="low">1000</p>
 					    <p id="high">10000</p>
@@ -275,12 +286,14 @@ get_population(12000, 3000, [], function(response) {
 });
 
 function fillTooltip(block) {
-	return "med_inc_renters: " + Math.round(block.med_inc_renters) + "<br />"
-		+ "median_income: " + block.median_income + "<br />"
-		+ "num_asst_units: " + block.num_asst_units + "<br />"
-		+ "num_buildings: " + block.num_buildings + "<br />"
-		+ "num_households: " + block.num_households + "<br />"
-		+ "num_renters: " + Math.round(block.num_renters);
+	var median_income=Math.round(block.med_inc_renters);
+	return "Median Income of Renters" + "<br />"+ median_income + "<br />"
+		+ "Assisted Units" + "<br />"
+		+ block.num_asst_units + "<br />"
+		+ "Federal Assited Buildings" + "<br />"
+		+ block.num_buildings + "<br />"
+		+ "Total Renter Hoursehold" +  "<br />"
+		+ block.num_households;
 }
 
 var lastClicked = null;
