@@ -49,14 +49,6 @@
 		<!-- APPLICATION SPECIFIC JS -->
 		<script src="lib/jquery.js"></script>
 		<script src="lib/work.js"></script>
-		<script>
-			var blocks;
-			get_population(function(response) {
-				blocks = response;
-				console.log(blocks);
-			});
-			console.log(blocks);
-		</script>
 	</head>
 	<body>
 		<div id="mapContainer"></div>
@@ -145,6 +137,7 @@ if (heatmapProvider) {
 				 * 		....
 				 * ];
 				 */
+
 				for (var i = 0; i < data.length; i++) {
 					if (data[i].value < 4.5) {
 						data.splice(i, 1);
@@ -176,9 +169,14 @@ var searchtext = "seattle";
 	});
 });
 
-// for (var i = 0; i < blocks.length; i++) {
-// 	blocks[i]
-// };
+var blocks;
+get_population(function(response) {
+	blocks = response;
+	console.log(blocks);
+	for (var i = 0; i < blocks.length; i++) {
+	 	console.log(blocks[i]);
+	};
+});
 
 // map.objects.add(new nokia.maps.map.Polygon(
 // 	[
