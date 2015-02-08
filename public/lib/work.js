@@ -1,14 +1,16 @@
 // longitude, latitude everytime
 
+function inRange(latlong, lon, lat) {
+  return lon >= latlong[0] && lon <= latlong[2] && lat >= latlong[1] && lat <= latlong[3];
+}
+
 /*
-  GRAB DATA FROM PUBLIC HOUSING ALSO
-
-  AGGREGATE ASSISTED UNIT COUNTS
-
-  ARRAY OF BUILDING LAT/LONG
+  start: row to start query
+  latlong: 4 element array [minLon, minLat, maxLon, maxLat]
+  
 */
 // returns list of coordinates for buildings that qualify for a subsidy program
-function get_subsidized_buildings(start, cumulative, callback) {
+function get_subsidized_buildings(start, latlong, cumulative, callback) {
   var end = start + 1000;
   console.log('retrieving results from MULTIFAMILY PROPERTIES: ' + start + ' to ' + end);
   var request = $.ajax({
@@ -35,14 +37,16 @@ function get_subsidized_buildings(start, cumulative, callback) {
         return;
       }
       for (var item in result.features) {
-        var curr = {
-          coordinates: [result.features[item].properties.LON, result.features[item].properties.LAT],
-          num_asst_units: result.features[item].properties.TOTAL_ASSISTED_UNIT_COUNT,
-          type: result.features[item].properties.CLIENT_GROUP_TYPE
-        };
-        cumulative.push(curr);
+        if (inRange(latlong, result.features[item].properties.LON, result.features[item].properties.LAT)) {
+          var curr = {
+            coordinates: [result.features[item].properties.LON, result.features[item].properties.LAT],
+            num_asst_units: result.features[item].properties.TOTAL_ASSISTED_UNIT_COUNT,
+            type: result.features[item].properties.CLIENT_GROUP_TYPE
+          };
+          cumulative.push(curr);
+        }
       }
-      get_subsidized_buildings(end, cumulative, callback);
+      get_subsidized_buildings(end, latlong, cumulative, callback);
     }
   });
 
@@ -121,7 +125,7 @@ function get_population(start, max, cumulative, callback) {
     pop_size: the population value
   }
 */
-function combineResponses(max_blocks, callback) {
+function combineResponsesToState(max_blocks, callback) {
   get_subsidized_buildings(0, [], function(a) {
     var buildings = a;
     get_population(0, max_blocks, [], function(b) {
@@ -172,6 +176,39 @@ function combineResponses(max_blocks, callback) {
     });
   });
 }
+
+function combineResponses(max_blocks, latlong, callback) {
+  get_subsidized_buildings(0, latlong, [], function(a) {
+    var buildings = a;
+    get_population(0, max_blocks, [], function(b) {
+      var blocks = b;
+      var building_to_block = 0;
+      var block_to_state = 0;
+      console.log('attaching buildings to blocks...');
+      for (var build in buildings) {
+        // ASSUMPTION: no two block polygons overlap each other
+        var buildingLoc = buildings[build].coordinates;
+        for (var i = 0; i < blocks.length; i++) {
+          if (pointInPoly(buildingLoc, blocks[i].coordinates)) {
+            blocks[i].num_buildings += 1;
+            blocks[i].num_asst_units += buildings[build].num_asst_units;
+            blocks[i].buildings.push({
+              coordinates: buildings[build].coordinates,
+              type: buildings[build].type
+            });
+            break;
+          }
+        }
+        if (i < blocks.length) {
+          building_to_block += 1;
+        }
+        console.log('.');
+      }
+      console.log('fin, ' + building_to_block + ' out of ' + buildings.length + ' buildings successfully mapped to a block');
+      callback(blocks);
+    });
+  });
+};
 
 function blockCentroid(vs) {
   var x1 = vs[0][0];
