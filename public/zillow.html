@@ -313,7 +313,7 @@ combineResponses(250000, [-123, 30, -114, 40], function(response) {
 			var marker = new nokia.maps.map.StandardMarker(coordinate, {
 				brush: { color: color }
 			});
-			
+
 			map.objects.add(marker);
 		}
 	}
@@ -324,7 +324,7 @@ function fillTooltip(block) {
 	return "Median Income of Renters" + "<br />" +"<span class='number'>" + median_income + "</span>" + "<br />"
 		+ "Assisted Units" + "<br />"
 		+ "<span class='number'>" + block.num_asst_units + "</span>" + "<br />"
-		+ "Federal Assited Buildings" + "<br />"
+		+ "Federal Assisted Buildings" + "<br />"
 		+ "<span class='number'>" + block.num_buildings + "</span>" + "<br />"
 		+ "Total Renter Household" +  "<br />"
 		+ "<span class='number'>" + block.num_households + "</span>";
