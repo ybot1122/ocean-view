@@ -90,7 +90,7 @@
 	</head>
 	<body>
 		<div id="mapContainer"></div>
-		<div id="uiContainer">
+		<div id="uiContainer" style="display: none;">
 			<div id="locationFinder">
 				<div id="locationFinderLabel">We help government make better decision</div>
 				<div id="search">
@@ -119,6 +119,7 @@ var map = new nokia.maps.map.Display(mapContainer, {
 		// Add the behavior component to allow panning / zooming of the map
 		new nokia.maps.map.component.Behavior()
 	],
+	baseMapType: nokia.maps.map.Display.SMARTMAP,
 	center: [37.6, -95.665],
 	zoomLevel: 4
 });
@@ -140,7 +141,11 @@ var searchtext = "seattle";
 	});
 });
 
-get_population(10000, function(response) {
+var lineVisibility = "30";
+var shapeVisibility = "70";
+
+get_population(5000, 5000, [], function(response) {
+	// console.log(blocks[0]);
 	var blocks = response;
 	for (var i = 0; i < blocks.length; i++) {
 		var coordinates = blocks[i].coordinates;
@@ -154,38 +159,61 @@ get_population(10000, function(response) {
 			var latitude = coordinates[j][1];
 			ncs[ncs.length] = new nokia.maps.geo.Coordinate(latitude, longitude);
 		};
-		map.objects.add(new nokia.maps.map.Polygon(ncs, {
-			pen: { strokeColor: "#000", lineWidth: 1 },
-			brush: { color: color}
-			// brush: { color: "#C22A" }
-		}));
+		var polygon = new nokia.maps.map.Polygon(ncs, {
+			pen: { strokeColor: "#000000" + lineVisibility, lineWidth: 1 },
+			brush: { color: color }
+		});
+		map.objects.add(polygon);
+		// On mouse click we fire off the default event handler
+		polygon.addListener("mouseenter", enterHandler);
+		polygon.addListener("mouseleave", leaveHandler);
 	}
 });
+
+var enterHandler = function (evt) {
+	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	/* Normally on certain events like double click the map zooms in 
+	 * we would like to prevent this behavior when clicking a 
+	 * Spatial object (Circle, Rectangle, Polyline or Polygon)
+	 */
+	if (evt.target instanceof nokia.maps.map.Spatial) {
+		/* Prevent other event listeners from being triggered
+		 * For more details see  nokia.maps.dom.Event
+		 */
+		evt.stopImmediatePropagation();
+	}
+};
+
+var leaveHandler = function (evt) {
+	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + shapeVisibility});
+	if (evt.target instanceof nokia.maps.map.Spatial)
+		evt.stopImmediatePropagation();
+};
 
 function colorize(min, max, value) {
   var quarter1 = min + (max - min) * 0.25;
   var quarter2 = min + (max - min) * 0.5;
   var quarter3 = min + (max - min) * 0.75;
   if (value >= max)
-    return "#FF0000";
+    return "#FF0000" + shapeVisibility;
   else if (value >= quarter3) {
     var g = Math.round((max - value) / (max - quarter3) * 256 - 1);
-    return "#FF" + dec2hex(g) + "00";
+    return "#FF" + dec2hex(g) + "00" + shapeVisibility;
   }
   else if (value >= quarter2) {
     var r = Math.round((value - quarter2) / (quarter3 - quarter2) * 256);
-    return "#" + dec2hex(r) + "FF00";
+    return "#" + dec2hex(r) + "FF00" + shapeVisibility;
   }
   else if (value >= quarter1) {
     var b = Math.round((quarter2 - value) / (quarter2 - quarter1) * 256 - 1);
-    return "#00FF" + dec2hex(b);
+    return "#00FF" + dec2hex(b) + shapeVisibility;
   }
   else if (value >= min) {
     var g = Math.round((value - min) / (quarter1 - min) * 256);
-    return "#00" + dec2hex(g) + "FF";
+    return "#00" + dec2hex(g) + "FF" + shapeVisibility;
   }
   else
-    return "#0000FF";
+    return "#0000FF" + shapeVisibility;
 }
 
 function dec2hex(dec) {
