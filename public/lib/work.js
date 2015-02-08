@@ -47,12 +47,14 @@ function get_subsidized_buildings(start, cumulative, callback) {
 function get_population(start, callback) {
   var end = start + 1000;
   console.log('retrieving results: ' + start + ' to ' + end);
-  if (end >= 200000) {
+  if (end >= 15000) {
+    console.log('fin');
     return;
   }
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?'
-        + 'where=OBJECTID%251%3D0&outFields=households%2C+area_median_income&outSR={"wkid":4326}&f=geojson',
+        + 'where=OBJECTID >= ' + start + ' AND OBJECTID < ' + end 
+        +'&outFields=households%2C+area_median_income&outSR={"wkid":4326}&f=geojson',
     type: 'GET',
     datatype: 'JSON'
   });

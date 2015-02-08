@@ -169,7 +169,7 @@ var searchtext = "seattle";
 	});
 });
 
-get_population(0, function(response) {
+get_population(10000, function(response) {
 	var blocks = response;
 	for (var i = 0; i < blocks.length; i++) {
 		var coordinates = blocks[i].coordinates;
