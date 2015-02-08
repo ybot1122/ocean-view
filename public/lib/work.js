@@ -1,14 +1,6 @@
-/*
 
-a) consume APIs and receive
-  - list of buildings that are eligible for X subsidy programs
-  - raw lower-income data for United States
-
-b) 
-
-*/
-
-function get_subsidized_buildings() {
+// returns list of coordinates for buildings that qualify for a subsidy program
+function get_subsidized_buildings(callback) {
   var subsidies = "IS_202_811_IND='y' OR IS_202_CAPITAL_ADVANCE_IND='y' OR IS_202_DIRECT_LOAN_IND='y' OR IS_221D3_IND='y'"
        + " OR IS_221D4_IND='y' OR IS_236_IND='y' OR IS_811_CAPITAL_ADVANCE_IND='y' OR IS_ACC_OLD_IND='y' OR IS_ACC_PERFORMANCE_BASED_IND='y'"
        + " OR IS_ACTIVE_DEC_CASE_IND='y' OR IS_AFS_REQUIRED_IND='y' OR IS_ALL_CONTRACT_PIPELINE_IND='y' OR IS_ALL_FINANCING_PIPELINE_IND='y'"
@@ -32,25 +24,28 @@ function get_subsidized_buildings() {
       // request succeeded
       response.status = 'success';
       var result = JSON.parse(res);
-      for (var item in res.features) {
+      for (var item in result.features) {
         var curr = {
-
+          coordinates: result.features[item].geometry.coordinates
         };
         response.data.push(curr);
       }
-      console.log(response;);
+      callback(response);
     }
   });
 
   // request failed to even make it to server
   request.fail(function(data, msg) {
     console.log('couldn\'t hit them');
+    callback({status: 'failure'});
   });
 }
 
-function get_population() {
+// returns list of 'blocks' with each group 
+function get_population(callback) {
   var request = $.ajax({
-    url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?where=OBJECTID%255000%3D0&outFields=households%2C+area_median_income&f=pgeojson',
+    url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?'
+        + 'where=OBJECTID%251%3D0&outFields=households%2C+area_median_income&f=pgeojson',
     type: 'GET',
     datatype: 'JSON'
   });
@@ -65,25 +60,74 @@ function get_population() {
       response.status = 'success';
       var result = JSON.parse(res);
       for (var item in result.features) {
-        var curr = {
-          coordinates: result.features[item].geometry.coordinates[0],
-          num_households: result.features[item].properties.households,
-          median_income: result.features[item].properties.area_median_income,
+        for (var ring in result.features[item].geometry.coordinates) {
+          var curr = {
+            coordinates: result.features[item].geometry.coordinates[ring],
+            num_households: result.features[item].properties.households,
+            median_income: result.features[item].properties.area_median_income,
+          }
+          response.data.push(curr);
         }
-        response.data.push(curr);
       }
-      console.log(response);
+      callback(response);
     }
   });
 
   // request failed to even make it to server
   request.fail(function(data, msg) {
     console.log('couldn\'t hit them');
+    callback({status: 'failure'});
   });
 }
 
-//Function to get data for each map rectangle
-//Uses the location to put the data in the correct cell
+/*
+  using the data from the buildings and blocks, we combine to form a single
+  dimension array of objects that are of the format
+  {
+    num_buildings: number of buildings in block
+    centroid: the 'average' coordinate of the block
+    pop_size: the population value
+  }
+*/
+function combineResponses() {
+  get_subsidized_buildings(function(a) {
+    var buildings = a;
+    get_population(function(b) {
+      var blocks = b;
+      for (var build in buildings.data) {
+        // ASSUMPTION: no two block polygons overlap each other
+        var buildingLoc = buildings.data[build].coordinates;
+        var i = 0;
+        while (i < blocks.data.length && !pointInPoly(buildingLoc, blocks.data[i].coordinates)) {
+          i++;
+        }
+        console.log(buildingLoc);
+      }
+    });
+  });
+}
+
+/*
+  checks if a point is contained within a polygon
+  credit: https://github.com/substack
+*/
+function pointInPoly(point, vs) {
+  // ray-casting algorithm based on
+  // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+  var x = point[0], y = point[1];
+  var inside = false;
+  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    var xi = vs[i][0], yi = vs[i][1];
+    var xj = vs[j][0], yj = vs[j][1];
+    var intersect = ((yi > y) != (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+// Function to get data for each map rectangle
+// Uses the location to put the data in the correct cell
 // Takes in the top left coudinate of map, bottom left cordinate of the map. numBlocks: 2 entry array with number of rows and columns
 // returns a 2D array with data in each cell
 // Loops through all of the data, and puts each into the correct location in the array
@@ -92,18 +136,15 @@ function get_population() {
 function getMapData(allData, mapTopLeft, mapBottomRight, numBlocks){
   //Initiialize the block array. Let me know if there's a better way to do this.
   var blockArray = new Array(numBlocks[0]);
-  for(i = 0; i < blockArray.length; i++)
-      blockArray[i] = new Array(numBlocks[1]);
+  for (i = 0; i < blockArray.length; i++) {
+    blockArray[i] = new Array(numBlocks[1]);
+  }
 
-  for (dataNum = 0; dataNum < data.length; dataNum ++){
+  for (dataNum = 0; dataNum < data.length; dataNum ++) {
     dataEntry = allData[dataNum];
     dataLoc = dataEntry.coordinates;
-
-    console.log(dataLoc);
-
     // Use this function to get where the entry belongs in the block array
     arrayLoc = getArrayLoc(dataLoc, mapTopLeft, mapBottomRight, numBlocks);
-    console.log(arrayLoc);
     // Add the entry to the appropriate location in the block array
     blockArray[arrayLoc[0]][arrayLoc[1]] = dataEntry;
   }

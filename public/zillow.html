@@ -47,7 +47,16 @@
 				color: white;
 			}
 		</style>
-
+		<! -- APPLICATION SPECIFIC JS -->
+		<script src="lib/jquery.js"></script>
+		<script src="lib/work.js"></script>
+		<script>
+			var blocks;
+			get_population(function(response) {
+				blocks = response;
+			});
+			console.log(blocks);
+		</script>
 	</head>
 	<body>
 		<div id="mapContainer"></div>
