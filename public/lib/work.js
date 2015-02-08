@@ -126,7 +126,9 @@ function combineResponses(max_blocks, callback) {
     var buildings = a;
     get_population(0, max_blocks, [], function(b) {
       var blocks = b;
-      var found = 0;
+      var building_to_block = 0;
+      var block_to_state = 0;
+      console.log('attaching buildings to blocks...');
       for (var build in buildings) {
         // ASSUMPTION: no two block polygons overlap each other
         var buildingLoc = buildings[build].coordinates;
@@ -142,14 +144,47 @@ function combineResponses(max_blocks, callback) {
           }
         }
         if (i < blocks.length) {
-          found += 1;
+          building_to_block += 1;
         }
         console.log('.');
       }
-      console.log('fin, ' + found + ' out of ' + buildings.length + ' buildings successfully mapped to a block');
+
+      console.log('attaching blocks to states, almost done...');
+      // attach block to a state
+      for (var j = 0; j < blocks.length; j++) {
+        var blockLoc = blockCentroid(blocks[j].coordinates);
+        for (var i = 0; i < states.length; i++) {
+          for (var n = 0; n < states[i].coordinates.length; n++) {
+            if (pointInPoly(blockLoc, states[i].coordinates[n])) {
+              block_to_state += 1;
+              states[i].blocks.push(blocks[j]);
+              states[i].num_buildings += blocks[j].num_buildings,
+              states[i].num_asst_units += blocks[j].num_asst_units,
+              states[i].num_renters += blocks[j].num_renters
+            }
+          }
+          console.log('.');
+        }
+      }
+      console.log('fin, ' + building_to_block + ' out of ' + buildings.length + ' buildings successfully mapped to a block');
+      console.log(block_to_state + ' out of ' + blocks.length + ' blocks successfully mapped to a state');
       callback(blocks);
     });
   });
+}
+
+function blockCentroid(vs) {
+  var x1 = vs[0][0];
+  var y1 = vs[0][1];
+  var x2 = vs[0][0];
+  var y2 = vs[0][1];
+  for (var i = 0; i < vs.length; i++) {
+    x1 = (vs[i][0] < x1) ? vs[i][0] : x1;
+    y1 = (vs[i][1] < y1) ? vs[i][1] : y1;
+    x2 = (vs[i][1] > x2) ? vs[i][0] : x2;
+    y2 = (vs[i][1] > y2) ? vs[i][1] : y2;
+  }
+  return [x1 + ((x2 - x1) / 2), y1 + ((y2 - y1) / 2)];
 }
 
 function pointInPoly(point, vs) {

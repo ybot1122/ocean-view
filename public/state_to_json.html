@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <!-- APPLICATION SPECIFIC JS -->
+    <script src="lib/jquery.js"></script>
+    <script src="lib/states.js"></script>
+  </head>
+  <body>
+  <p>retrieve json of states</p>
+  <p id="result"></p>
+
+  <script>
+  $('document').ready(function() {
+    var result = [];
+    for (var i = 0; i < states.features.length; i++) {
+        if (!states.features[i]) {
+          i += 1;
+        } else {
+          result.push({
+            name: states.features[i].properties.NAME,
+            num_buildings: 0,
+            num_renters: 0,
+            num_asst_units: 0,
+            coordinates: states.features[i].geometry.coordinates,
+            blocks: []
+          });
+        }
+    }
+    $('#result').html(JSON.stringify(result));
+  });
+  </script>
+  </body>
+</html>
