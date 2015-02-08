@@ -54,7 +54,7 @@ function get_population(start, callback) {
   var request = $.ajax({
     url: 'http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?'
         + 'where=OBJECTID >= ' + start + ' AND OBJECTID < ' + end 
-        +'&outFields=households%2C+area_median_income&outSR={"wkid":4326}&f=geojson',
+        +'&outFields=households%2C+area_median_income%2C+pct_renters%2C+blkgrp_median_income_renters&outSR={"wkid":4326}&f=geojson',
     type: 'GET',
     datatype: 'JSON'
   });
@@ -73,10 +73,13 @@ function get_population(start, callback) {
             coordinates: result.features[item].geometry.coordinates[ring],
             num_households: result.features[item].properties.households,
             median_income: result.features[item].properties.area_median_income,
+            med_inc_renters:  result.features[item].properties.blkgrp_median_income_renters,
+            num_renters: result.features[item].properties.pct_renters * result.features[item].properties.households
           }
           response.push(curr);
         }
       }
+      console.log(response[0]);
       callback(response);
       get_population(end, callback);
     }
