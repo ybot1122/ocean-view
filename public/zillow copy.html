@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html> 
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=7; IE=EmulateIE9; IE=10" />
+
+		 <!-- Bootstrap Core CSS -->
+        <link href="style/bootstrap.min.css" rel="stylesheet">
+		<base href="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/public/api-for-js/data-visualization/map-with-value-heat-map.html" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<title>HERE Maps API for JavaScript Example: Add value based heat map</title>
+		<meta name="description" content="Visualize your analytics data using a value based heat map"/>
+		<meta name="keywords" content="valueheatmap, heatmaps, data visualization, heat, map"/>
+		<!-- For scaling content for mobile devices, setting the viewport to the width of the device-->
+		<meta name=viewport content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<!-- Styling for example container (NoteContainer & Logger)  -->
+		<link rel="stylesheet" type="text/css" href="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/templates/js/exampleHelpers.css"/>
+		<!-- By default we add ?with=all to load every package available,
+			it's better to change this parameter to your use case. 
+			Options ?with=maps|positioning|places|placesdata|directions|datarendering|all -->
+		<script type="text/javascript" charset="UTF-8" src="http://js.cit.api.here.com/se/2.5.4/jsl.js?with=all"></script>
+		<!-- JavaScript for example container (NoteContainer & Logger)  -->
+		<script type="text/javascript" charset="UTF-8" src="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/templates/js/exampleHelpers.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<style type="text/css">
+			html {
+				overflow:hidden;
+			}
+			
+			body {
+				margin: 0;
+				padding: 0;
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+			}
+			
+			#mapContainer {
+				width: 100%;
+				height: 100%;
+				left: 0;
+				top: 0;
+				position: absolute;
+			}
+
+			/*Location find*/
+			#uiContainer{
+              width: 20%;
+              height: auto;
+              padding: 2% 0;
+			}
+			#locationFinder {
+			    padding: 6% 0;
+				background-color: #3BC1C3;
+				opacity: 0.8;
+			}
+			#button{
+				padding-left: 10px;
+           }
+
+			.text{
+             margin-left: 2%;
+			}
+
+			/*Filter*/
+			#filter{
+				padding: 6% 0;
+				background-color: #9B9B9B;
+				opacity: 0.8;
+			}
+
+			#options{
+				margin-left: 2%;
+			}
+
+			#explain{
+				padding: 6% 0;
+				background-color: #868586;
+				opacity: 0.8;
+			}
+			#legend{
+				padding: 6% 0;
+				background-color: #656465;
+				opacity: 0.8;
+			}
+            .title{
+                font-size: 16px;
+                color: white;
+                padding-left: 3%;
+                padding-bottom: 2%;
+            }
+
+		</style>
+
+	</head>
+	<body>
+		<div id="mapContainer"></div>
+		<div id="uiContainer">
+			<div id="locationFinder">
+				<div id="search">
+				   <div class="title">Select an area</div>
+					<input type="text" class="text" value="ss" id="text"  />
+					<input type="button" class="button" id="button" value="Search"/>
+				</div>
+			</div>
+			<div id="filter">
+				<div id="search">
+				    <div class="title">Filter</div>
+				    <div id="options">
+						<input type="checkbox" name="e-low" value="e-low"> Public housing<br>
+						<input type="checkbox" name="low" value="low"> Low-income family<br>
+						<input type="checkbox" name="disabled" value="disabled"> Disabled<br>
+						<input type="checkbox" name="senior" value="senior"> Senior<br>
+					</div>
+				</div>
+			</div>
+			<div id="explain">
+				<div id="search">
+				    <div class="title">Tooltips</div>
+					<p>
+				</div>
+			</div>
+			<div id="legend">
+				<div id="search">
+				    <div class="title">Legend</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript" id="exampleJsSource">
+/*	Setup authentication app_id and app_code 
+*	WARNING: this is a demo-only key
+*	please register for an Evaluation, Base or Commercial key for use in your app.
+*	Just visit http://developer.here.com/get-started for more details. Thank you!
+*/
+nokia.Settings.set("app_id", "DemoAppId01082013GAL"); 
+nokia.Settings.set("app_code", "AJKnXv84fjrb0KIHawS0Tg");
+// Use staging environment (remove the line for production environment)
+nokia.Settings.set("serviceMode", "cit");
+
+// Get the DOM node to which we will append the map
+var mapContainer = document.getElementById("mapContainer");
+
+// Create a map inside the map container DOM node
+var map = new nokia.maps.map.Display(mapContainer, {
+	components: [
+		// Add the behavior component to allow panning / zooming of the map
+		new nokia.maps.map.component.Behavior()
+	],
+	center: [37.6, -95.665],
+	zoomLevel: 4
+});
+
+var heatmapProvider;
+var colorizeAPI = {
+	/* Points on the heat map are colorized using the color-stops (range 0 - 1)
+	 * The highest data points will get a color defined by 1 and the 
+	 * the lower your data points get they will get a color defined by 0
+	 */
+	stops: {
+		"0": "#E8680C",
+		"0.25": "#F5A400",
+		"0.5": "#FF9000",
+		"0.75": "#FF4600",
+		"1": "#F51F00"
+	},
+	// Whether we should interpolate between the stops to create a smooth color gradient
+	interpolate: true
+};
+try {
+	// Creating Heatmap overlay
+	heatmapProvider = new nokia.maps.heatmap.Overlay({
+		// How to color the heatmap
+		colors: colorizeAPI,
+		// This is the greatest zoom level for which the overlay will provide tiles
+		max: 20,
+		// This is the overall opacity applied to this overlay
+		opacity: 0.6,
+		// Defines if our heatmap is value or density based
+		type: "value",
+		// Coarseness defines the resolution with which the heat map is created.
+		coarseness: 2
+	});
+} catch (e) {
+	// The heat map overlay constructor throws an exception if there
+	// is no canvas support in the browser
+	alert(typeof e == "string" ? e : e.message);
+}
+// Only start loading data if the heat map overlay was successfully created
+if (heatmapProvider) {
+	// Trigger the load of data, after the map emmits the "displayready" event
+	map.addListener("displayready", function () {
+		/* We load a data file containing data points for the heat map
+		 * LoadScript is an helper function and not part of the Maps API for JavaScript
+		 * See exampleHelpers.js for implementation details 
+		 */
+		loadScript(
+			"../../../res/earthquakes.js", 
+			function () {
+				/**
+				 * Filtering data to show only eartquakes with magnitud above 4.5. Variable data comes from script inserted in head (heatmap.js)
+				 * This file is array of objects like:
+				 * data = [
+				 * 		{latitude: 53, longitude: 13: value 5.3},
+				 * 		....
+				 * ];
+				 */
+				for (var i = 0; i < data.length; i++) {
+					if (data[i].value < 4.5) {
+						data.splice(i, 1);
+					}
+				}
+				
+				// Rendering the heat map overlay onto the map
+				heatmapProvider.addData(data);
+				map.overlays.add(heatmapProvider);
+			}
+		);
+	}, false);
+}
+
+$("input#button").click(function () {
+var searchtext = "seattle";
+	var url = "http://geocoder.cit.api.here.com/6.2/geocode.json?"
+		+ "searchtext=" + $("input#text").val()
+		+ "&app_id=DemoAppId01082013GAL"
+		+ "&app_code=AJKnXv84fjrb0KIHawS0Tg"
+		+ "&gen=6"
+	$.getJSON(url, function (data) {
+		var mv = data.Response.View[0].Result[0].Location.MapView;
+		var bbox = new nokia.maps.geo.BoundingBox(
+			new nokia.maps.geo.Coordinate(mv.TopLeft.Latitude, mv.TopLeft.Longitude),
+			new nokia.maps.geo.Coordinate(mv.BottomRight.Latitude, mv.BottomRight.Longitude)
+		);
+		map.zoomTo(bbox, false, "default");
+	});
+});
+$("input#text").each(function ()
+{
+    var v = this.value;
+
+    $(this).blur(function ()
+    {
+        // if input is empty, reset value to default 
+        if (this.value.length == 0) this.value = v;
+    }).focus(function ()
+    {
+        // when input is focused, clear its contents
+        this.value = "";
+    }); 
+});
+
+</script>
+	</body>
+</html>
