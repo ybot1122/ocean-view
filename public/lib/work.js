@@ -5,9 +5,7 @@ function inRange(latlong, lon, lat) {
 }
 
 /*
-  start: row to start query
   latlong: 4 element array [minLon, minLat, maxLon, maxLat]
-  
 */
 // returns list of coordinates for buildings that qualify for a subsidy program
 function get_subsidized_buildings(start, latlong, cumulative, callback) {
@@ -205,7 +203,14 @@ function combineResponses(max_blocks, latlong, callback) {
         console.log('.');
       }
       console.log('fin, ' + building_to_block + ' out of ' + buildings.length + ' buildings successfully mapped to a block');
-      callback(blocks);
+      var result = [];
+      for (var n = 0; n < blocks.length; n++) {
+        var center = blockCentroid(blocks[n].coordinates);
+        if (inRange(latlong, center[0], center[1])) {
+          result.push(blocks[i]);
+        }
+      }
+      callback(result);
     });
   });
 };
