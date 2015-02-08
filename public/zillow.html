@@ -248,7 +248,7 @@ $("input#button").click(function () {
 var lineVisibility = "30";
 var shapeVisibility = "70";
 
-get_population(10000, 2000, [], function(response) {
+get_population(15000, 2000, [], function(response) {
 // combineResponses(10000, [], function(response) {
 	var blocks = response;
 	console.log(blocks[i]);
@@ -274,11 +274,6 @@ get_population(10000, 2000, [], function(response) {
 		});
 		polygon.block = block;
 
-		if (block.buildings.length > 0) {
-			console.log(block);
-			console.log(i);
-		}
-
 		// On mouse click we fire off the default event handler
 		polygon.addListener("click", clickHandler);
 		polygon.addListener("mouseenter", enterHandler);
@@ -286,7 +281,7 @@ get_population(10000, 2000, [], function(response) {
 		map.objects.add(polygon);
 	}
 
-	get_subsidized_buildings(0, [], function(response) {
+	get_subsidized_buildings(0, [-123, 32, -114, 37.77], [], function(response) {
 		var buildings = response.slice(0, 1000);
 		for (var i = 0; i < buildings.length; i++) {
 			var building = buildings[i];
