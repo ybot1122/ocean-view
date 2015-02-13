@@ -259,7 +259,10 @@ $("input#button").click(function () {
 var lineVisibility = "30";
 var shapeVisibility = "70";
 
-combineResponses(250000, [-123, 30, -114, 40], function(response) {
+// error coordinates: [-123, 25, -100, 40]
+// midwest: [-103, 30, -94, 40]
+// bay-area: [-123, 30, -114, 40]
+combineResponses(250000, [-103, 25, -94, 40], function(response) {
 // combineResponses(10000, [], function(response) {
 	var blocks = response;
 
