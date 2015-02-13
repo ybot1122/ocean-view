@@ -1,0 +1,94 @@
+html {
+  overflow:hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+#mapContainer {
+  position: absolute;
+  top: 100px;
+  width: 100%;
+  height: 100%;
+}
+
+/*Location find*/
+#uiContainer{
+  width: 20%;
+  height: auto;
+  padding: 2% 0;
+}
+
+#locationFinder {
+  padding: 6% 0;
+  background-color: #3BC1C3;
+  opacity: 0.8;
+  color: black;
+}
+#button{
+  padding-left: 10px;
+}
+
+.text{
+  margin-left: 2%;
+}
+
+      /*Filter*/
+
+#filter{
+        padding: 6% 0;
+        background-color: #9B9B9B;
+        opacity: 0.8;
+      }
+
+      #options{
+        margin-left: 2%;
+      }
+
+      #explain{
+        padding: 6% 0;
+        background-color: #868586;
+        opacity: 0.9;
+      }
+      #tooltip{
+        padding-top: 3%;        
+        text-align: center;
+        color:white;
+      }
+      #legend{
+        padding: 6% 0;
+        background-color: #656465;
+        opacity: 0.8;
+      }
+            .title{
+                font-size: 16px;
+                padding-left: 3%;
+                padding-bottom: 2%;
+            }
+            .title-big{
+              font-size: 20px;
+              padding-left: 3%;
+              padding-bottom: 2%;
+            }
+            .number{
+               font-size: 30px;
+            }
+            /*Legend*/
+            #colorbar{
+              position: relative;
+              right: 20px;
+              padding-left: 2%;
+            }
+            #low{
+              display: inline-block;
+              padding-left: 2%;
+            }
+            #high{
+              display: inline-block;
+              padding-left: 190px;
+            }
