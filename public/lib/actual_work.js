@@ -7,8 +7,8 @@ function get_buildings(minmax, callback) {
   var request = $.ajax({
     url: "http://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MultiFamilyProperties/FeatureServer/0/query?"
       + "where=IS_202_811_IND = 'y' OR IS_SEC8_IND = 'y' OR IS_RENT_SUPPLEMENT_IND = 'y'&outFields="
-      + "LAT%2C+LON%2C+TOTAL_ASSISTED_UNIT_COUNT%2C+CLIENT_GROUP_TYPE&geometry={\"xmin\":" + minmax[1] + ",\"ymin\":"
-      + minmax[0] + ",\"xmax\":" + minmax[3] + ",\"ymax\":" + minmax[2] + ",\"spatialReference\":"
+      + "LAT%2C+LON%2C+TOTAL_ASSISTED_UNIT_COUNT%2C+CLIENT_GROUP_TYPE&geometry={\"xmin\":" + minmax[0] + ",\"ymin\":"
+      + minmax[1] + ",\"xmax\":" + minmax[2] + ",\"ymax\":" + minmax[3] + ",\"spatialReference\":"
       + "{\"wkid\":4236}}&f=geojson",
     type: 'GET',
     datatype: 'JSON'
@@ -40,8 +40,8 @@ function get_blocks(minmax, callback) {
   var request = $.ajax({
     url: "http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?"
         + "where=OBJECTID >= 0&outFields=households%2C+area_median_income%2C+pct_renters%2C+blkgrp_median_income_renters&outSR="
-        + "{\"wkid\":4326}&geometry={\"xmin\":" + minmax[1] + ",\"ymin\":" + minmax[0] + ",\"xmax\":" + minmax[3] + ",\"ymax\":"
-        + minmax[2] + ",\"spatialReference\":{\"wkid\":4236}}&f=geojson",
+        + "{\"wkid\":4326}&geometry={\"xmin\":" + minmax[0] + ",\"ymin\":" + minmax[1] + ",\"xmax\":" + minmax[2] + ",\"ymax\":"
+        + minmax[3] + ",\"spatialReference\":{\"wkid\":4236}}&f=geojson",
     type: 'GET',
     datatype: 'JSON'
   });
@@ -73,3 +73,55 @@ function get_blocks(minmax, callback) {
     callback(cumulative);
   });
 }
+
+function getMapData(minmax, callback) {
+  var buildings;
+  var blocks;
+  var building_to_block = 0;
+
+  get_buildings(minmax, function(building_data) {
+    buildings = building_data;
+    get_blocks(minmax, function(block_data) {
+      blocks = block_data;
+      for (var build in buildings) {
+        // ASSUMPTION: no two block polygons overlap each other
+        var buildingLoc = buildings[build].coordinates;
+        for (var i = 0; i < blocks.length; i++) {
+          if (pointInPoly(buildingLoc, blocks[i].coordinates)) {
+            blocks[i].num_buildings += 1;
+            blocks[i].num_asst_units += buildings[build].num_asst_units;
+            blocks[i].buildings.push({
+              coordinates: buildings[build].coordinates,
+              type: buildings[build].type
+            });
+            building_to_block += 1;
+            break;
+          }
+        }
+      }
+      console.log('fin, ' + building_to_block + ' out of '
+          + buildings.length + ' buildings successfully mapped to a block');
+      callback(blocks);
+    });
+  });
+}
+
+// from github
+function pointInPoly(point, vs) {
+    // ray-casting algorithm based on
+    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    
+    var x = point[0], y = point[1];
+    
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+        
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    
+    return inside;
+};
