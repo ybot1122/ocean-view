@@ -259,17 +259,10 @@ $("input#button").click(function () {
 var lineVisibility = "30";
 var shapeVisibility = "70";
 
-// error coordinates: [-123, 25, -100, 40]
-// midwest: [-103, 30, -94, 40]
-// bay-area: [-123, 30, -114, 40]
-combineResponses(250000, [-103, 25, -94, 40], function(response) {
-// combineResponses(10000, [], function(response) {
+getMapData([-122.459696, 47.48172, -122.224433, 47.734145], function(response) {
 	var blocks = response;
 
 	for (var i = 0; i < blocks.length; i++) {
-		if (blocks[i].num_buildings < 1) {
-			continue;
-		}
 		var block = blocks[i];
 
 		var coordinates = block.coordinates;
