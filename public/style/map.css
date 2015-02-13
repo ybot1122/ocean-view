@@ -12,7 +12,7 @@ body {
 
 #mapContainer {
   position: absolute;
-  top: 100px;
+  top: 130px;
   width: 100%;
   height: 100%;
 }
@@ -30,6 +30,7 @@ body {
   opacity: 0.8;
   color: black;
 }
+
 #button{
   padding-left: 10px;
 }

@@ -25,16 +25,42 @@
 		<script src="lib/jquery.js"></script>
     <script src="lib/states.js"></script>
 		<script src="lib/actual_work.js"></script>
+    <script src="lib/loadData.js"></script>
 	</head>
 	<body>
     <div id="header">
-      <h1>Zillow's Housing Hackathon</h1>
-      <p>This is a demonstration of potential data visualization for the new data provided by Housing and Urban Development.</p>
-      <p>Currently, it focuses on comparing two measures: concentration of subsidy-eligible housing vs median area income.</p>
+      <table>
+        <tr>
+          <td>
+            <h1>Zillow's Housing Hackathon</h1>
+            <p>This is a demonstration of potential data visualization for the new data provided by Housing and Urban Development.</p>
+            <p>Currently, it focuses on comparing two measures: concentration of subsidy-eligible housing vs median area income.</p>
+            <p>Source Code: <a href="https://github.com/ybot1122/ocean-view">https://github.com/ybot1122/ocean-view</a></p>
+            <p>Hackathon Info: <a href="http://investors.zillow.com/releasedetail.cfm?ReleaseID=892685">http://investors.zillow.com/releasedetail.cfm?ReleaseID=892685</a></p>
+          </td>
+          <td>
+            <p>Click here to load some data</p>
+            <table id="cities">
+              <tr>
+                <td data-name="chicago">Chicago, IL</td>
+                <td data-name="durham">Durham, NC</td>
+                <td data-name="houston">Houston, TX</td>
+                <td data-name="littlerock">Little Rock, AK</td>
+              </tr>
+              <tr>
+                <td data-name="miami">Miami, FL</td>
+                <td data-name="newyorkcity">New York City, NY</td>
+                <td data-name="sanfrancisco">San Francisco, CA</td>
+                <td data-name="seattle">Seattle, WA</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </div>
 
 		<div id="mapContainer"></div>
-    
+
 		<div id="uiContainer">
 			<div id="locationFinder">
 				<div id="search">
@@ -115,62 +141,6 @@ $("input#button").click(function () {
 
 var lineVisibility = "30";
 var shapeVisibility = "70";
-
-getMapData([-122.459696, 47.48172, -122.224433, 47.734145], function(response) {
-	var blocks = response;
-
-	for (var i = 0; i < blocks.length; i++) {
-		var block = blocks[i];
-
-		var coordinates = block.coordinates;
-		if (coordinates.length == 1)
-			coordinates = coordinates[0];
-
-		var ncs = [];
-		for (var j = 0; j < coordinates.length; j++) {
-			var longitude = coordinates[j][0];
-			var latitude = coordinates[j][1];
-			ncs[ncs.length] = new nokia.maps.geo.Coordinate(latitude, longitude);
-		};
-
-		var color = colorize(Math.log(20000), Math.log(100000), Math.log(block.median_income));
-		var polygon = new nokia.maps.map.Polygon(ncs, {
-			pen: { strokeColor: "#000000" + lineVisibility, lineWidth: 1 },
-			brush: { color: color }
-		});
-		polygon.block = block;
-
-		// On mouse click we fire off the default event handler
-		polygon.addListener("click", clickHandler);
-		polygon.addListener("mouseenter", enterHandler);
-		polygon.addListener("mouseleave", leaveHandler);
-		map.objects.add(polygon);
-	}
-
-	for (var i = 0; i < blocks.length; i++) {
-		for (var n = 0; n < blocks[i].buildings.length; n++) {
-			var building = blocks[i].buildings[n];
-			var longitude = building.coordinates[0];
-			var latitude = building.coordinates[1];
-			var coordinate = new nokia.maps.geo.Coordinate(latitude, longitude);
-
-			var color = null;
-			if (building.type == "Elderly")
-				color = "#7ED321";
-			else if (building.type == "Disabled")
-				color = "#3BC1C3";
-			else if (building.type == "Family")
-				color = "#4A90E2";
-			else
-				color = "#000000";
-			var marker = new nokia.maps.map.StandardMarker(coordinate, {
-				brush: { color: color }
-			});
-
-			map.objects.add(marker);
-		}
-	}
-});
 
 function fillTooltip(block) {
 	var median_income=Math.round(block.med_inc_renters);

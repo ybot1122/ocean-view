@@ -1,16 +1,35 @@
 #header {
   width: 100%;
-  height: 100px;
-  padding: 20px 10%;
+  height: 130px;
   background: black;
 }
-  #header p {
-    color: silver;
-    padding-left: 30px;
-    margin: 0px;
-  }
+
+table, tr ,td {
+  padding: 0px;
+  margin: 0px;
+  color: white;
+}
+
+table h1, table p {
+  padding: 0px;
+  margin: 0px;
+}
+
+td {
+  vertical-align: top;
+  padding: 5px;
+}
+
+#cities td {
+  color: green;
+  font-weight: bold;
+}
 
 #legend {
   color: white;
   padding: 5px;
+}
+
+#loading {
+  display: none;
 }
