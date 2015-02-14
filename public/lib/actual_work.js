@@ -35,11 +35,12 @@ function get_buildings(minmax, callback) {
   });
 }
 
-function get_blocks(minmax, callback) {
-  console.log('retrieving results from LOCATION AFFORDABILITY INDEX');
+function get_blocks_recr(start, cumulative, minmax, callback) {
+
   var request = $.ajax({
     url: "http://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/LocationAffordabilityIndexData/FeatureServer/0/query?"
-        + "where=OBJECTID >= 0&outFields=households%2C+area_median_income%2C+pct_renters%2C+blkgrp_median_income_renters&outSR="
+        + "where=OBJECTID>" + start + "&outFields=households%2C+area_median_income%2C+pct_renters%2C+blkgrp_median_income_renters"
+        + "%2C+OBJECTID&outSR="
         + "{\"wkid\":4326}&geometry={\"xmin\":" + minmax[0] + ",\"ymin\":" + minmax[1] + ",\"xmax\":" + minmax[2] + ",\"ymax\":"
         + minmax[3] + ",\"spatialReference\":{\"wkid\":4236}}&f=geojson",
     type: 'GET',
@@ -54,7 +55,7 @@ function get_blocks(minmax, callback) {
     }
     // need to parse because api gives us text format
     var result = JSON.parse(res);
-    var cumulative = [];
+    var end = 0;
     for (var item in result.features) {
       for (var ring in result.features[item].geometry.coordinates) {
         var curr = {
@@ -68,10 +69,24 @@ function get_blocks(minmax, callback) {
           buildings: []
         };
         cumulative.push(curr);
+        if (result.features[item].properties.OBJECTID > end) {
+          end = result.features[item].properties.OBJECTID;
+        }
       }
     }
-    callback(cumulative);
+    if (result.features.length < 1000) {
+      console.log('we got ' + cumulative.length + ' results');
+      callback(cumulative);
+      return;
+    } else {
+      get_blocks_recr(end, cumulative, minmax, callback);
+    }
   });
+}
+
+function get_blocks(minmax, callback) {
+  console.log('retrieving results from LOCATION AFFORDABILITY INDEX');
+  get_blocks_recr(0, [], minmax, callback);
 }
 
 function getMapData(minmax, callback) {
