@@ -41,9 +41,8 @@ function postClick(element) {
   element.find('img').remove();
   element.css('color', 'blue');
   element.css('cursor', 'auto');
-  element.hover(function(e) {
-    return;
-  });
+  element.css('text-decoration', 'none');
+  element.unbind();
 }
 
 function processData(response) {
@@ -83,17 +82,24 @@ function processData(response) {
       var longitude = building.coordinates[0];
       var latitude = building.coordinates[1];
       var coordinate = new nokia.maps.geo.Coordinate(latitude, longitude);
-
       var color = null;
-      if (building.type == "Elderly")
+      var text = null;
+      if (building.type == "Elderly") {
         color = "#7ED321";
-      else if (building.type == "Disabled")
+        text = "S";
+      }
+      else if (building.type == "Disabled") {
         color = "#3BC1C3";
-      else if (building.type == "Family")
+        text = "D";
+      }
+      else if (building.type == "Family") {
         color = "#4A90E2";
+        text = "L";
+      }
       else
         color = "#000000";
       var marker = new nokia.maps.map.StandardMarker(coordinate, {
+        text: text,
         brush: { color: color }
       });
 
