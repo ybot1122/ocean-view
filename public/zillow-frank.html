@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html> 
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=7; IE=EmulateIE9; IE=10" />
+		 <!-- Bootstrap Core CSS -->
+        <link href="style/bootstrap.min.css" rel="stylesheet">
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<title>Demand vs Supply - Federal Assisted Housing Map</title>
+		<meta name="description" content="Visualize your analytics data using a value based heat map"/>
+		<meta name="keywords" content="valueheatmap, heatmaps, data visualization, heat, map"/>
+		<!-- For scaling content for mobile devices, setting the viewport to the width of the device-->
+		<meta name=viewport content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<!-- Styling for example container (NoteContainer & Logger)  -->
+		<link rel="stylesheet" type="text/css" href="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/templates/js/exampleHelpers.css"/>
+		<!-- By default we add ?with=all to load every package available,
+			it's better to change this parameter to your use case. 
+			Options ?with=maps|positioning|places|placesdata|directions|datarendering|all -->
+		<script type="text/javascript" charset="UTF-8" src="http://js.cit.api.here.com/se/2.5.4/jsl.js?with=all"></script>
+		<!-- JavaScript for example container (NoteContainer & Logger)  -->
+		<script type="text/javascript" charset="UTF-8" src="http://apidocs-legacy-documentations3bucket.s3-website-eu-west-1.amazonaws.com/apiexplorer/examples/templates/js/exampleHelpers.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<style type="text/css">
+			html {
+				overflow:hidden;
+			}
+			
+			body {
+				margin: 0;
+				padding: 0;
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+			}
+			
+			#mapContainer {
+				width: 100%;
+				height: 100%;
+				left: 0;
+				top: 0;
+				position: absolute;
+			}
+			/*#uiContainer{
+              width: 100%;
+              padding: 8% 0;
+			}
+			#locationFinder {
+			    padding: 6% 0;
+				background-color: black;
+				opacity: 0.8;
+			}
+			#locationFinderLabel {
+				color: white;
+				text-align: center;
+				font-size: 30px;
+			}
+			#button{
+				position:relative;
+				top:0px;
+				text-decoration: none;
+				font-size: 18px;
+				color:#4a4a4a;
+				padding-left:28px;
+				padding-top:10px;
+				padding-right:28px;
+				padding-bottom:8px;
+			    border-radius: 5px;
+			    background:rgba(255,255,255, 1);
+			    border: rgba(255,255,255, 0.59);
+           }
+			.text{
+              height:40px;
+              width: 300px;
+              margin-left: 35%;
+              border-radius: 5px;
+              margin-right: 2%;
+              margin-top: 2%;
+			}*/
+			/*Location find*/
+			#uiContainer{
+              width: 20%;
+              height: auto;
+              padding: 2% 0;
+			}
+			#locationFinder {
+			    padding: 6% 0;
+				background-color: #3BC1C3;
+				opacity: 0.8;
+			}
+			#button{
+				padding-left: 10px;
+           }
+			.text{
+             margin-left: 2%;
+			}
+			/*Filter*/
+#filter{
+				padding: 6% 0;
+				background-color: #9B9B9B;
+				opacity: 0.8;
+			}
+			#options{
+				margin-left: 2%;
+			}
+			#explain{
+				padding: 6% 0;
+				background-color: #868586;
+				opacity: 0.8;
+			}
+			#tooltip{
+			    padding-top: 3%;				
+				text-align: center;
+				color:white;
+			}
+			#legend{
+				padding: 6% 0;
+				background-color: #656465;
+				opacity: 0.8;
+			}
+            .title{
+                font-size: 16px;
+                color: white;
+                padding-left: 3%;
+                padding-bottom: 2%;
+            }
+            .title-big{
+            	font-size: 20px;
+                color: white;
+                padding-left: 3%;
+                padding-bottom: 2%;
+            }
+            .number{
+               font-size: 30px;
+               color: #3BC1c3;
+            }
+            /*Legend*/
+            #colorbar{
+            	position: relative;
+            	right: 20px;
+            	padding-left: 2%;
+            }
+            #low{
+            	display: inline-block;
+            	padding-left: 2%;
+            }
+            #high{
+            	display: inline-block;
+            	padding-left: 50%;
+            }
+		</style>
+		<!-- APPLICATION SPECIFIC JS -->
+		<script src="lib/jquery.js"></script>
+    <script src="lib/states.js"></script>
+		<script src="lib/work.js"></script>
+	</head>
+	<body>
+		<div id="mapContainer"></div>
+		<!--<div id="uiContainer" style="">
+			<div id="locationFinder">
+				<div id="locationFinderLabel">We help government make better decision</div>
+				<div id="search">
+					<input type="text" class="text" id="text" />
+					<input type="button" class="button" id="button" value="Search" onclick="myFunction()"/>
+				</div>
+			</div>
+		</div>-->
+		<div id="uiContainer">
+			<div id="locationFinder">
+				<div id="search">
+				   <div class="title">Select an area</div>
+					<input type="text" class="text" value="cityname/zipcode.." id="text"  />
+					<input type="button" class="button" id="button" value="Search"/>
+				</div>
+			</div>
+			<div id="filter">
+				<div id="search">
+				    <div class="title">Filter</div>
+				    <div id="options">
+						<input type="checkbox" name="low" value="low" style="color: white;"> Low-income family<br>
+						<input type="checkbox" name="disabled" value="disabled" style="color: white;"> Disabled<br>
+						<input type="checkbox" name="senior" value="senior" style="color: white;"> Senior<br>
+					</div>
+				</div>
+			</div>
+			<div id="explain">
+				<div id="search">
+				    <div class="title">Block Summary</div>
+					<div id="tooltip"></div>
+				</div>
+			</div>
+			<div id="legend">
+				<div id="search">
+				    <div class="title">Renter Median Income
+				     	<img src="img/legend.png" alt="">
+				     </div>
+
+				    <div id="legendnumber">
+					    <p id="low" style="color: white;">$20,000</p>
+					    <p id="high" style="color: white;">$100,000</p>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript" id="exampleJsSource">
+/*	Setup authentication app_id and app_code 
+*	WARNING: this is a demo-only key
+*	please register for an Evaluation, Base or Commercial key for use in your app.
+*	Just visit http://developer.here.com/get-started for more details. Thank you!
+*/
+nokia.Settings.set("app_id", "DemoAppId01082013GAL"); 
+nokia.Settings.set("app_code", "AJKnXv84fjrb0KIHawS0Tg");
+// Use staging environment (remove the line for production environment)
+nokia.Settings.set("serviceMode", "cit");
+// Get the DOM node to which we will append the map
+var mapContainer = document.getElementById("mapContainer");
+// Create a map inside the map container DOM node
+var map = new nokia.maps.map.Display(mapContainer, {
+	components: [
+		// Add the behavior component to allow panning / zooming of the map
+		new nokia.maps.map.component.Behavior()
+	],
+	baseMapType: nokia.maps.map.Display.SMARTMAP,
+	center: [37.6, -95.665],
+	zoomLevel: 4
+});
+$("input#text").keyup(function(event){
+    if(event.keyCode == 13){
+        $("input#button").click();
+    }
+});
+$("input#button").click(function () {
+	var url = "http://geocoder.cit.api.here.com/6.2/geocode.json?"
+		+ "searchtext=" + $("input#text").val()
+		+ "&app_id=DemoAppId01082013GAL"
+		+ "&app_code=AJKnXv84fjrb0KIHawS0Tg"
+		+ "&gen=6"
+	$.getJSON(url, function (data) {
+		var mv = data.Response.View[0].Result[0].Location.MapView;
+		var bbox = new nokia.maps.geo.BoundingBox(
+			new nokia.maps.geo.Coordinate(mv.TopLeft.Latitude, mv.TopLeft.Longitude),
+			new nokia.maps.geo.Coordinate(mv.BottomRight.Latitude, mv.BottomRight.Longitude)
+		);
+		map.zoomTo(bbox, false, "default");
+	});
+});
+var lineVisibility = "30";
+var shapeVisibility = "70";
+combineResponses(250000, [-103, 35, -90, 40], function(response) {
+// combineResponses(10000, [], function(response) {
+	var blocks = response;
+	for (var i = 0; i < blocks.length; i++) {
+		if (blocks[i].num_buildings < 1) {
+			continue;
+		}
+		var block = blocks[i];
+		var coordinates = block.coordinates;
+		if (coordinates.length == 1)
+			coordinates = coordinates[0];
+		var ncs = [];
+		for (var j = 0; j < coordinates.length; j++) {
+			var longitude = coordinates[j][0];
+			var latitude = coordinates[j][1];
+			ncs[ncs.length] = new nokia.maps.geo.Coordinate(latitude, longitude);
+		};
+		var color = colorize(Math.log(20000), Math.log(100000), Math.log(block.med_inc_renters));
+		var polygon = new nokia.maps.map.Polygon(ncs, {
+			pen: { strokeColor: "#000000" + lineVisibility, lineWidth: 1 },
+			brush: { color: color }
+		});
+		polygon.block = block;
+		// On mouse click we fire off the default event handler
+		polygon.addListener("click", clickHandler);
+		polygon.addListener("mouseenter", enterHandler);
+		polygon.addListener("mouseleave", leaveHandler);
+		map.objects.add(polygon);
+	}
+	for (var i = 0; i < blocks.length; i++) {
+		for (var n = 0; n < blocks[i].buildings.length; n++) {
+			var building = blocks[i].buildings[n];
+			var longitude = building.coordinates[0];
+			var latitude = building.coordinates[1];
+			var coordinate = new nokia.maps.geo.Coordinate(latitude, longitude);
+			var color = null;
+			var text = null;
+			if (building.type == "Elderly") {
+				color = "#7ED321";
+				text = "S";
+			}
+			else if (building.type == "Disabled") {
+				color = "#3BC1C3";
+				text = "D";
+			}
+			else if (building.type == "Family") {
+				color = "#4A90E2";
+				text = "L";
+			}
+			else
+				color = "#000000";
+			var marker = new nokia.maps.map.StandardMarker(coordinate, {
+				text: text,
+				brush: { color: color }
+			});
+			map.objects.add(marker);
+		}
+	}
+});
+function fillTooltip(block) {
+	var median_income=Math.round(block.med_inc_renters);
+	return "Median Income of Renters" + "<br />" +"<span class='number'>" + median_income + "</span>" + "<br />"
+		+ "Assisted Units" + "<br />"
+		+ "<span class='number'>" + block.num_asst_units + "</span>" + "<br />"
+		+ "Federal Assisted Buildings" + "<br />"
+		+ "<span class='number'>" + block.num_buildings + "</span>" + "<br />"
+		+ "Total Renter Household" +  "<br />"
+		+ "<span class='number'>" + block.num_households + "</span>";
+}
+var lastClicked = null;
+function clickHandler(evt) {
+	if (lastClicked)
+		lastClicked.brushSetter({ color: lastClicked.fillColor.substring(0, 7) + shapeVisibility});
+	evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	lastClicked = evt.target;
+	$("div#tooltip").html(fillTooltip(evt.target.block));
+	/* Normally on certain events like double click the map zooms in 
+	 * we would like to prevent this behavior when clicking a 
+	 * Spatial object (Circle, Rectangle, Polyline or Polygon)
+	 */
+	if (evt.target instanceof nokia.maps.map.Spatial) {
+		/* Prevent other event listeners from being triggered
+		 * For more details see  nokia.maps.dom.Event
+		 */
+		evt.stopImmediatePropagation();
+	}
+}
+function enterHandler(evt) {
+	if (evt.target != lastClicked)
+		evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + "FF"});
+	if (evt.target instanceof nokia.maps.map.Spatial) {
+		evt.stopImmediatePropagation();
+	}
+}
+function leaveHandler(evt) {
+	if (evt.target != lastClicked)
+		evt.target.brushSetter({ color: evt.target.fillColor.substring(0, 7) + shapeVisibility});
+	if (evt.target instanceof nokia.maps.map.Spatial)
+		evt.stopImmediatePropagation();
+}
+function colorize(min, max, value) {
+  var quarter1 = min + (max - min) * 0.25;
+  var quarter2 = min + (max - min) * 0.5;
+  var quarter3 = min + (max - min) * 0.75;
+  if (value >= max)
+    return "#FF0000" + shapeVisibility;
+  else if (value >= quarter3) {
+    var g = Math.round((max - value) / (max - quarter3) * 256 - 1);
+    return "#FF" + dec2hex(g) + "00" + shapeVisibility;
+  }
+  else if (value >= quarter2) {
+    var r = Math.round((value - quarter2) / (quarter3 - quarter2) * 256);
+    return "#" + dec2hex(r) + "FF00" + shapeVisibility;
+  }
+  else if (value >= quarter1) {
+    var b = Math.round((quarter2 - value) / (quarter2 - quarter1) * 256 - 1);
+    return "#00FF" + dec2hex(b) + shapeVisibility;
+  }
+  else if (value >= min) {
+    var g = Math.round((value - min) / (quarter1 - min) * 256);
+    return "#00" + dec2hex(g) + "FF" + shapeVisibility;
+  }
+  else
+    return "#0000FF" + shapeVisibility;
+}
+$("input#text").each(function ()
+{
+    var v = this.value;
+    $(this).blur(function ()
+    {
+        // if input is empty, reset value to default 
+        if (this.value.length == 0) this.value = v;
+    }).focus(function ()
+    {
+        // when input is focused, clear its contents
+        this.value = "";
+    }); 
+});
+function dec2hex(dec) {
+	var hex = dec.toString(16);
+	if (hex.length < 2)
+		return "0" + hex;
+	else
+		return hex;
+}
+		</script>
+	</body>
+</html>
